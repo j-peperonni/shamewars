@@ -23,28 +23,33 @@ document.currentScript.class =
                      //master: { offset:[0,0],wt: 64, ht: 32+16, ll: 30 } },
 
                      { ll: 5, flip:[0,0], buf: [ [0, 0] ] },
-                     { ll: 5, flip:[1,0], buf: [ [0, 0] ] },
-
+                   
                      { ll: 6, flip:[0,0], buf: [ [0, 2],[0, 3],[0, 4],[0, 3], ] },
-                     { ll: 6, flip:[1,0], buf: [ [0, 2],[0, 3],[0, 4],[0, 3], ] },
-
+                   
                      { ll: 5, flip:[0,0], buf: [ [0, 2],[0, 3],[0, 4],[0, 3], ] },
-                     { ll: 5, flip:[1,0], buf: [ [0, 2],[0, 3],[0, 4],[0, 3], ] },
-
+                   
                      //saltosuba
                      { ll: 5, flip:[0,0], buf: [ [0, 6] ] },
-                     { ll: 5, flip:[1,0], buf: [ [0, 6] ] },
-
+                   
                      //saltobaja
                      { ll: 5, flip:[0,0], buf: [ [0, 7] ] },
-                     { ll: 5, flip:[1,0], buf: [ [0, 7] ] },
-
+                   
                      //ataque
-                     { offset:[-16,-16],ll: 5, loop:1, flip:[0,0],    buf: [ [0, 8],[0, 9],[0, 9],[0, 10] ] },
-                     { offset:[-16,-16   ] ,ll: 5, loop:1, flip:[1,0],  buf: [ [0, 8],[0, 9],[0, 9],[0, 10] ] },
+                     { offset:[-16,-16],ll: 5, loop:1, flip:[0,0],    buf: [ [0, 8],[0, 9],[0, 9],[0, 10] ] }, //5
 
-                     //quemado
-                     { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [4, 0] ] },
+                     { offset:[-16,-16],ll: 5, loop:1, flip:[0,0],    buf: [ [0, 8],[0, 9],[0, 9],[0, 10] ] },        //10
+                     { offset:[-16,-16],ll: 5, loop:1, flip:[0,0],    buf: [ [0, 8],[0, 9],[0, 9],[0, 10] ] },        //10
+                     { offset:[-16,-16],ll: 5, loop:1, flip:[0,0],    buf: [ [0, 8],[0, 9],[0, 9],[0, 10] ] },        //10
+                     { offset:[-16,-16],ll: 5, loop:1, flip:[0,0],    buf: [ [0, 8],[0, 9],[0, 9],[0, 10] ] },        //10
+                     
+
+                     //anims hit
+                     //10 empelotada 
+                     { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [3, 0] ] },
+                     //electrocutada
+                     { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [3, 1] ] },
+                   
+                  
 
               ),
                }
@@ -52,14 +57,21 @@ document.currentScript.class =
             ]
        },
 
-       orien:0,       
+
        xvelocity:0,
        yvelocity:0,
+       macroestado:'normal',
        estado_h:0,
        estado:0,
+       orien:0,       
+       
        w:10,
        h:32,
        _z:10,
+       suelo_tt:0,
+       salto_tt:0,
+       draw_color: '',
+
        vel:
        {
           x_ini:0.2,
@@ -71,32 +83,219 @@ document.currentScript.class =
           y_salto:5,
        },
 
-       suelo_tt:0,
-       salto_tt:0,
-       draw_color: '',
 
+       crear_texto(_arr = [["MI POTO"
+                            
+                            ],
+                           // "ESTOY PELADITA", "ESTOY DESNUDA", "ESTOY DESNUDITA",
+                           // "MI CALZON?", "NO ME VEAS AHI !", "SE ME VE?" 
+
+                            ["MY VAGINEE", "MY PUSSY", "I AM NAKED"]
+                          ], f_data={})
+       {
+
+               
+
+                let _r = rand_bet_(0, _arr[0].length-1);
+                    _r = [_arr[0][_r],_arr[1][_r]];
+
+
+               let _texto = crear_texto(this, {
+                                                ...{canvas_id:2, 
+                                                    x:-5, 
+                                                    y:-20, 
+                                                    texto:_r, 
+                                                    enterframe()
+                                                    {
+                                                      //this.w++;
+                                                      //this.h++;
+                                                    this.x=-this.w/2;
+                                                    
+                                                      if(this.padre.x+this.x<$root.level.x*-1)
+                                                      this.x -= (this.padre.x+this.x)-($root.level.x*-1);
+                                                      
+                                                  
+                                                     },
+                                                      _onload()
+                                                      {   
+
+                                                      this.enterframe();        
+
+                                                      },
+
+                                                      },
+                                                      ...f_data
+                                                      }
+
+                                                      , 
+                                                      'opciones'
+                                                      //'opciones_simple'
+
+                                                      );
+
+
+
+       },
 
        //|hitcon
        hitcon:
        {
-         hits:0,
+         hits:[0,2],
          estado:0,
          tt:[0,6,  0,9],
-         kill()
+         //|kill_modos
+         kill_modos:
          {
-          game.playcon.play(11);
-             let _jugador = $root.level.jugador;
-           _jugador.xvelocity=0;             
-           _jugador.yvelocity=0;             
-             $root.level.jugador.quemar();
-             this.estado=-1;
-           _jugador.anim.visible = true;
-           
+           empelotada:
+           {
 
+            choritocam_id:{
+                           hit: [ [0,0],[0,1],[0,0] ],
+                           kill:[ [0,3],[0,3],[0,3] ]
+                           },
+            hit:
+            {
+              
+              anim_id:10,
+            },
+
+            animdata: GAME.crear_animdata( { master: { offset:[-16,-16],wt: 64, ht: 32+16, ll: 30 } },
+                                           { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [5, 0] ] },
+                                           { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [4, 0] ] },
+                                          ),
+
+            loadframe(_jugador)
+            {
+            
             let _p = [[5,5],[-5,5]]; _p = _p[$root.level.jugador.orien];
             crear_particula($root.level, {anim_id:2, grav:0.03, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//calzoncito
                 _p = [[-8,-10],[-8,-10]]; _p = _p[$root.level.jugador.orien];
             crear_particula($root.level, {anim_id:3, grav:0.03, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//sosten
+
+             _jugador.yvelocity=-3;                
+            },
+            enterframe(_jugador)
+            {
+               _jugador.yvelocity+=0.1;
+               //_jugador.anim.animdata.force.flip=[1,0];
+               if(_jugador.yvelocity<0.5)
+                _jugador.estado_h=0;
+              else
+              {
+                if(this.foo!==1)
+                {
+                _jugador.crear_texto([['NO VEAS!', 'MI CHORITO', 'MI CHORO', 'MI SAPITO'],['DONT LOOK', 'MY SLIT'] ]);  
+                this.foo=1;
+                }
+                _jugador.estado_h=1;
+              }
+                
+               if(_jugador.y>game.hcanvas+500)
+               {
+                   game.escenario.act.on_muerto();
+               }
+            },
+           },//end empelotada
+           aplastada:
+           {
+                        choritocam_id:{
+                           hit: [ [0,0],[0,0],[0,0] ],
+                           kill:[ [0,1],[0,2],[0,3] ]
+                           },
+
+            animdata: GAME.crear_animdata( { master: { offset:[-16,-16],wt: 64, ht: 32+16, ll: 30 } },
+                                           { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [4, 4] ] },
+                                           { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [4, 5] ] },
+                                          ),
+
+            loadframe(_jugador)
+            {
+            _jugador.crear_texto([['ME APRETA EL POTO', 'AU, MI POTITO'],['MY ASS HURT'] ],{y:-30});
+            let _p = [[5,5],[-5,5]]; _p = _p[$root.level.jugador.orien];
+            crear_particula($root.level, {anim_id:2, grav:0.03, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//calzoncito
+                _p = [[-8,-10],[-8,-10]]; _p = _p[$root.level.jugador.orien];
+            crear_particula($root.level, {anim_id:3, grav:0.03, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//sosten
+
+             _jugador.yvelocity=-3;                
+             _jugador.anim.animdata.force.flip=[_jugador.orien,0];
+            },
+            enterframe(_jugador)
+            {
+               _jugador.yvelocity+=0.1;
+               if(_jugador.yvelocity<0.5)
+                _jugador.estado_h=0;
+              else
+                _jugador.estado_h=1;
+               if(_jugador.y>game.hcanvas+500)
+               {
+                   game.escenario.act.on_muerto();
+               }
+            },
+           },//end aplastada
+
+           electrocutada:
+           {
+                        choritocam_id:{
+                           hit: [ [0,0],[0,0],[0,0] ],
+                           kill:[ [0,3],[0,3],[0,3] ]
+                           },
+            hit:
+            {
+              anim_id:11,
+            },
+            animdata: GAME.crear_animdata( { master: { offset:[-16,-16],wt: 64, ht: 32+16, ll: 30 } },
+                                           { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [5, 1] ] },
+                                          ),
+
+            loadframe(_jugador)
+            {
+            _jugador.crear_texto([['AUCH'],['AUCH'] ], {y:-30});
+            let _p = [[5,5],[-5,5]]; _p = _p[$root.level.jugador.orien];
+            crear_particula($root.level, {anim_id:2, grav:0.03, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//calzoncito
+                _p = [[-8,-10],[-8,-10]]; _p = _p[$root.level.jugador.orien];
+            crear_particula($root.level, {anim_id:3, grav:0.03, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//sosten
+
+             _jugador.yvelocity=-3;                
+             _jugador.anim.animdata.force.flip=[1,0];
+            },
+            enterframe(_jugador)
+            {
+                _jugador.anim.rotation+=0.1;
+                _jugador.anim.rotation_c=[_jugador.anim.w/2,_jugador.anim.h/2];
+               _jugador.yvelocity+=0.1;
+               if(_jugador.y>game.hcanvas+500)
+               {
+                    game.escenario.act.on_muerto();
+               }
+            },
+           },//end electrocutada
+
+         },//end kill_modos
+         kill(f_modo = 'empelotada')
+         {
+          let _jugador   = $root.level.jugador;
+          let _level     = $root.level;
+          let _kill_modo = this.kill_modos[f_modo];
+          let _choritocam_id = _kill_modo.choritocam_id;
+          game.choritocam.crear( random_from_array(_choritocam_id.kill), 'jugador');
+          this.estado=-1;
+          this.hits[0]=this.hits[1];
+          game.playcon.play(11);
+          
+           _jugador.xvelocity=0;             
+           _jugador.yvelocity=0;             
+
+           _jugador.anim.visible = true;
+           _jugador.anim.animdata = _kill_modo.animdata;
+           _jugador.anim.animdata.set_anim(0);
+           _jugador.estado_h = 0;
+
+           _jugador.kill_modo_act = _kill_modo;
+           _kill_modo.loadframe(_jugador);
+
+
+            _jugador.macroestado='muerto';
+
          },
          run()
          {
@@ -109,47 +308,58 @@ document.currentScript.class =
                if(_tt[0]>=_tt[1])
                {
                 _tt[0]=0;
+                if(_jugador.macroestado!=='hit')
                 _tt[2]++;
                 _jugador.anim.visible = swap_bin(_jugador.anim.visible);
                 if(_tt[2]>_tt[3])
-                {
-
-                  
+                {       
                   _tt[2]=0;
+                  _jugador.anim.visible = 1;
                   this.estado=0;
                 }
 
                }
 
-
             }
 
          },
-         hit()
+         hit(f_modo='empelotada')
          {
           if(this.estado==0)
           {
+
             this.estado=1;
             let _jugador = $root.level.jugador;
-
-
             
 
-            if(this.hits==0)
+            let _kill_modo = this.kill_modos[f_modo];
+
+             let _choritocam_id = _kill_modo.choritocam_id;
+             
+
+            this.hits[0]++;
+            if(this.hits[0]<this.hits[1])
             {
+              game.choritocam.crear( random_from_array(_choritocam_id.hit), 'jugador');
+
               game.playcon.play(9);
-            let _p = [[-8,-13],[-8,-13]]; _p = _p[$root.level.jugador.orien];
-            crear_particula($root.level, {anim_id:0, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//casco
+            let _p = [[-8,-5],[-8,-5]]; 
+                _p = _p[$root.level.jugador.orien];
+
+            crear_particula($root.level, {anim_id:1, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//armadura
             _p = [[0,3],[-3,3]]; _p = _p[$root.level.jugador.orien];
             
-            crear_particula($root.level, {anim_id:1, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//capa
             }
-            
 
-            this.hits++;
-            if(this.hits==2)
+            _jugador.macroestado='hit';
+            _jugador.yvelocity=-2.5;
+            _jugador.estado_h=_kill_modo.hit.anim_id;
+            
+            
+            if(this.hits[0]==this.hits[1])
             {
-             this.kill();
+
+             this.kill(f_modo);
              return(1);
 
             }
@@ -159,379 +369,7 @@ document.currentScript.class =
 
        },
 
-       //|scrollcon
-       scrollcon:
-       {
-          tt_score:[0,3],
-          xt:-10,
-          run(f_ini=0)
-          {
-
-             let _tilemaps = GES.tileges.tilemaps;
-
-            
-             this.xt=fl($root.level.x/16);
-
-           
-           
-             $root.level.x -= 1;
-
-             GES.tileges.x=$root.level.x*-1;
-             GES.tileges.y=$root.level.y*-1;
-
-             GES.fondoges.fondos[0].x = $root.level.x/8;
-             GES.fondoges.fondos[1].x = $root.level.x/1.8;
-
-             //GES.fondoges.fondos[1].x = $root.level.x*1.5;
-             
-           //  if($root.level.x>0)$root.level.x=0;
-           //  if ((-$root.level.x) + $tileges.xt_max * 16 > $tileges.xt_allmax * 16) 
-           //  $root.level.x = -($tileges.xt_allmax * 16 - $tileges.xt_max * 16);
-
-             /*$root.level.y = this.y*-1+game.hcanvas/2;
-             if($root.level.y>0)$root.level.y=0;
-              if ((-$root.level.y) + ($tileges.yt_max) * 16 > $tileges.yt_allmax * 16) 
-              $root.level.y = -($tileges.yt_allmax * 16 - ($tileges.yt_max) * 16);
-            */
-            
-            if(this.xt!=fl($root.level.x/16))
-            {
-              if(f_ini==0)
-              {
-                this.tt_score[0]++;
-                if(this.tt_score[0]==this.tt_score[1])
-                {
-                  this.tt_score[0]=0;
-                game.escenario.act.hud.update_score(10, '+');  
-                }
-                
-              }
-
-              for(var k=0;k<_tilemaps.length;k++)
-              {
-                let _tilemap = _tilemaps[k];
-                
-                   for(var i =0;i<_tilemap.length;i++)
-                   {
-                      if(k==1 && i>8 && (i!==13||i==13&&_tilemap[i-1][_tilemap[0].length-1]!==0) )
-                       {
-                        if(f_ini)
-                          _tilemap[i].push(1); 
-                        else
-                       _tilemap[i].push(rd(Math.random()) ); 
-                       }
-                       else
-                       _tilemap[i].push(0);
-                   }
-
-              }  
-              GES.tileges.update_allmax();
-
-
-
-
-                //cargar enemigo
-                let _r =rd(Math.random()*10);
-                if(f_ini==0&&_r==5)
-                {
-                let _enem = GES.cargar_clase($root.level, 3,{anim_id:20, x: $root.level.x*-1+game.wcanvas ,y:4*16});
-                }
-              
-             
-
-              for(var k=0;k<_tilemaps.length;k++)
-              {
-                let _tilemap = _tilemaps[k];
-                for(var i =0;i<_tilemap.length;i++)
-                {
-                  if(k==1)
-                  {
-                      if(_tilemap[i][_tilemap[i].length-1-1]==1)
-                      {
-                         let _c = check(i,1);
-
-                           //misc
-                                 
-                            if(f_ini!==1)
-                            {  
-                            if(!_c[1] && Math.random()<0.5)
-                             _tilemap[i-1][_tilemap[i].length-1-1]=90;
-
-                             if(!_c[3] && Math.random()<0.5)
-                             _tilemap[i+1][_tilemap[i].length-1-1]=91;
-                            }
-
-                          
-                                 //MISC
-
-                          
-                   
-
-                          if(!_c[0]&&!_c[1]&&!_c[2]&&!_c[3])
-                          _tilemap[i][_tilemap[i].length-1-1]=43;
-                        
-                          if(_c[0]&&_c[1]&&_c[2]&&_c[3])
-                          {
-                          _tilemap[i][_tilemap[i].length-1-1]=12;
-
-                          //   _____ 
-                          //  |_/   |
-                          //  |     |
-                          //  |_____|
-                          if(!_c[4])
-                           _tilemap[i][_tilemap[i].length-1-1]=16;
-
-                          //   _____ 
-                          //  |   |_|
-                          //  |     |
-                          //  |_____|
-                          if(!_c[5])
-                           _tilemap[i][_tilemap[i].length-1-1]=17;
-
-                          //   _____ 
-                          //  |     |
-                          //  |    _|
-                          //  |___|_|
-                          if(!_c[6])
-                           _tilemap[i][_tilemap[i].length-1-1]=27;
-
-
-                          //   _____ 
-                          //  |     |
-                          //  |_    |
-                          //  |_|___|
-                          if(!_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=26;
-
-                          //   _____ 
-                          //  |_| |_|
-                          //  |     |
-                          //  |_____|
-                          if(!_c[4]&&!_c[5]   &&_c[6]&&_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=46;
-
-                          //   _____ 
-                          //  |     |
-                          //  |_   _|
-                          //  |_|_|_|
-                          if(!_c[6]&&!_c[7]  &&_c[4]&&_c[5])
-                           _tilemap[i][_tilemap[i].length-1-1]=56;
-
-                          
-                          //   _____ 
-                          //  |   |_|
-                          //  |    _|
-                          //  |_ _|_|
-                          if(!_c[5]&&!_c[6]  &&_c[4]&&_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=49;
-
-                          //   _____ 
-                          //  |_|   |
-                          //  |_    |
-                          //  |_| __|
-                          if(!_c[4]&&!_c[7]  &&_c[5]&&_c[6])
-                           _tilemap[i][_tilemap[i].length-1-1]=48;                         
-
-                          //   _____ 
-                          //  |_| |_|
-                          //  |_   _|
-                          //  |_| |_|
-                          if(!_c[4]&&!_c[5]&&!_c[6]&&!_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=18;                         
-
-
-                          //   _____ 
-                          //  |   |_|
-                          //  |_    |
-                          //  |_|   |
-                          if( _c[4]&&!_c[5]&& _c[6]&&!_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=29;                         
-
-                          //   _____ 
-                          //  |_|   |
-                          //  |    _|
-                          //  |   | |
-                          if(!_c[4]&&_c[5]&& !_c[6]&&_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=38;                                                  
-
-
-                          //   _____ 
-                          //  |   |_|
-                          //  |_   _|
-                          //  | | | |
-                          if( _c[4]&&!_c[5]&& !_c[6]&&!_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=5;
-
-                          //   _____ 
-                          //  |_|   |
-                          //  |_   _|
-                          //  | | | |
-                          if(!_c[4]&&_c[5]&& !_c[6]&&!_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=15;
-
-                          //   _____ 
-                          //  |_| |_|
-                          //  |_    |
-                          //  | |   |
-                          if(!_c[4]&&!_c[5]&& _c[6]&&!_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=25;
-
-                          //   _____ 
-                          //  |_| |_|
-                          //  |    _|
-                          //  |   | |
-                          if(!_c[4]&&!_c[5]&& !_c[6]&&_c[7])
-                           _tilemap[i][_tilemap[i].length-1-1]=35;                         
-
-
-
-                          }                          
-
-
-                          //<
-                          if(!_c[0]&&!_c[1]&&_c[2]&&!_c[3])
-                           _tilemap[i][_tilemap[i].length-1-1]=31;
-
-                          //=
-                          if(_c[0]&&!_c[1]&&_c[2]&&!_c[3])
-                           _tilemap[i][_tilemap[i].length-1-1]=32;
-
-                          //>
-                          if(_c[0]&&!_c[1]&&!_c[2]&&!_c[3])
-                           _tilemap[i][_tilemap[i].length-1-1]=33;
-
-
-                          //¡
-                          if(!_c[0]&&!_c[1]&&!_c[2]&&_c[3])
-                           _tilemap[i][_tilemap[i].length-1-1]=34;
-
-                          //|
-                          if(!_c[0]&&_c[1]&&!_c[2]&&_c[3])
-                           _tilemap[i][_tilemap[i].length-1-1]=44;
-
-                          //!
-                          if(!_c[0]&&_c[1]&&!_c[2]&&!_c[3])
-                           _tilemap[i][_tilemap[i].length-1-1]=54;
-
-
-                          //____
-                          //|
-                          if(!_c[0]&&!_c[1]&&_c[2]&&_c[3])
-                          {
-                           _tilemap[i][_tilemap[i].length-1-1]=1;
-                             if(!_c[6])
-                             _tilemap[i][_tilemap[i].length-1-1]=8;
-                          }
-
-
-                          //____
-                          //
-                          if(_c[0]&&!_c[1]&&_c[2]&&_c[3])
-                          {
-                           _tilemap[i][_tilemap[i].length-1-1]=2;
-                         
-                           if(!_c[6])
-                            _tilemap[i][_tilemap[i].length-1-1]=42;
-                          if(!_c[7])
-                            _tilemap[i][_tilemap[i].length-1-1]=41;
-                          if(!_c[6]&&!_c[7])
-                            _tilemap[i][_tilemap[i].length-1-1]=40;
-
-                          }
-
-                          //____
-                          //    |
-                          if(_c[0]&&!_c[1]&&!_c[2]&&_c[3])
-                          {
-                           _tilemap[i][_tilemap[i].length-1-1]=3;
-                             if(!_c[7])
-                             _tilemap[i][_tilemap[i].length-1-1]=9;
-                          }
-
-                          //|
-                          //|
-                          if(!_c[0]&&_c[1]&&_c[2]&&_c[3])
-                          {
-                           _tilemap[i][_tilemap[i].length-1-1]=11;
-
-                           if(!_c[5])
-                            _tilemap[i][_tilemap[i].length-1-1]=10;
-                           if(!_c[6])
-                            _tilemap[i][_tilemap[i].length-1-1]=20;
-                          if(!_c[5]&&!_c[6])
-                            _tilemap[i][_tilemap[i].length-1-1]=30;
-
-                          }
-
-                          //    |
-                          //    |
-                          if(_c[0]&&_c[1]&&!_c[2]&&_c[3])
-                          {
-                           _tilemap[i][_tilemap[i].length-1-1]=13;
-
-                           if(!_c[4])
-                            _tilemap[i][_tilemap[i].length-1-1]=4;
-                           if(!_c[7])
-                            _tilemap[i][_tilemap[i].length-1-1]=14;
-                          if(!_c[4]&&!_c[7])
-                            _tilemap[i][_tilemap[i].length-1-1]=24;
-                          }
-
-                          //|
-                          //|____
-                          if(!_c[0]&&_c[1]&&_c[2]&&!_c[3])
-                          {
-                           _tilemap[i][_tilemap[i].length-1-1]=21;
-                             if(!_c[5])
-                              _tilemap[i][_tilemap[i].length-1-1]=6;
-                             
-
-                          }
-
-                          //
-                          //____
-                          if(_c[0]&&_c[1]&&_c[2]&&!_c[3])
-                          {
-                           _tilemap[i][_tilemap[i].length-1-1]=22;
-
-                           if(!_c[4])
-                            _tilemap[i][_tilemap[i].length-1-1]=51;
-                           if(!_c[5])
-                            _tilemap[i][_tilemap[i].length-1-1]=52;
-                          if(!_c[4]&&!_c[5])
-                            _tilemap[i][_tilemap[i].length-1-1]=50;
-                          }
-
-                          //    |
-                          //____|
-                          if(_c[0]&&_c[1]&&!_c[2]&&!_c[3])
-                          {
-                           _tilemap[i][_tilemap[i].length-1-1]=23;
-                             if(!_c[4])
-                             _tilemap[i][_tilemap[i].length-1-1]=7;
-                          }
-
-
-
-                          
-
-                          
-                        }          
-                   
-                  }
-                }
-
-              }    
-              GES.tileges.refresh.force();
-
-            }
-            
-
-
-          }
-
-       },
-
+       
        double_check(f_id, f_dir=0) //solucion workaround
        {
         let _a;
@@ -563,127 +401,94 @@ document.currentScript.class =
 
          return(0);
             
-
        },
        
 
-       quemar()
-       {
-              
-              let _level = $root.level;
-              this.macroestado='quemado';
-              this.xvelocity=0;
-              this.yvelocity=-5;
-
-               let _arr = [["MI CHORO", "MI CHORITO", "ESTOY A POTO PELADO",
-                            "MI PAPAYA", "MI CHORIFLAI", "ESTOY PELADITA",
-                            "OH, NO ME VEAI", "QUE WEA?", "MI CHURRIN!"
-                            ],
-                           // "ESTOY PELADITA", "ESTOY DESNUDA", "ESTOY DESNUDITA",
-                           // "MI CALZON?", "NO ME VEAS AHI !", "SE ME VE?" 
-
-                            ["MY VAGINEE", "MY PUSSY", "I AM NAKED"]
-                          ];
-
-                let _r = rand_bet_(0, _arr[0].length-1);
-                    _r = [_arr[0][_r],_arr[1][_r]];
-
-               let _texto = crear_texto(this, {x:-5, y:-20, texto:_r, 
-                    _onload(){   
-                             this.x=-this.w/2;
-                  
-                            if(this.padre.x+this.x<$root.level.x*-1)
-                              this.x -= (this.padre.x+this.x)-($root.level.x*-1);
-
-                            },
-
-                    }, 'opciones_simple');
-                   
-
-                   /*
-                   _texto.x=-_texto.w/2;
-                  
-                  if(this.x+_texto.x<_level.x*-1)
-                    _texto.x -= (this.x+_texto.x)-(_level.x*-1);
-                  */
-
-
-                 let _elebig = GES.crear_imagen($root.level, 9,  1, { x: $root.level.x*-1-(16*3), y: 5, w: 16 * 10, h: 16 * 10, visible:false,
-                                                               _z:30,
-                                                              cut_cords: { x: (16*10)*0, 
-                                                                           y: (16*10)*0,
-                                                                           w: 16 * 10,
-                                                                           h: 16 * 10
-                                                                          },
-                                           loadframe()
-                                           {
-
-                                            
-                                             if($root.level.jugador.x<$root.level.x*-1+game.wcanvas/2)
-                                             {
-                                              
-                                              this.x=$root.level.x*-1+game.wcanvas-(16*7)
-                                             
-                                             }
-                                             else
-                                             this.x=$root.level.x*-1-(16*3)
-
-                                            this.y= ($root.level.jugador.y-(16*5));
-                                           },
-                                           enterframe()
-                                           {
-                                            //this.x+= ($root.level.x*-1);
-                                            this.visible=game.win.teclado.get('c');
-                                            //this.visible=true;
-                                            this.y+= (($root.level.jugador.y-(16*5))-this.y)/20;
-                                            
-                                           }
-
-                                           ,
-                                                                           });
-                      //_elebig.enterframe();
-
-
-
-       },
+       
 
        loadframe() {
 
         this.anim = this.hijos_clip[0];
         this.estado=1;
 
-/*        game.scrollcon.level_start();
-        
 
-        this.x+=300;
-        GES.fondoges.fondos[0].x = $root.level.x/8;
-        GES.fondoges.fondos[1].x = $root.level.x/1.8;
-
-  */      
 
        },
 
-       macroestado:'normal',
+       
 
        enterframe() {
-              let _teclado = game.win.teclado;
-              let _vel = this.vel;
-              let _level = $root.level;
+
+            let _teclado = game.win.teclado;
+            let _vel = this.vel;
+            let _level = $root.level;
+            let _editmode = game.levelcon.editmode;
+            let _tilemaps = GES.tileges.tilemaps;
 
 
-              this.xprev = this.x;
-              this.yprev = this.y;
+            this.xprev = this.x;
+            this.yprev = this.y;
 
               
 
-              this.x = this.x + this.xvelocity;
-              this.y = this.y + this.yvelocity;
+            this.x = this.x + this.xvelocity;
+            this.y = this.y + this.yvelocity;
 
-              this.hitcon.run();
+            this.hitcon.run();
+
+
+
               
 
-              if(this.macroestado=='normal')
+           if(this.macroestado=='hit')
+           {
+             let _col = col_check(this); 
+             if(_col[1])
+              this.macroestado='normal';
+
+            this.yvelocity+= _vel.grav/2;
+
+            if(_teclado.get('izq'))
+            {
+              this.xvelocity-=0.3;
+              if(this.xvelocity<-2)
+                this.xvelocity=-2;
+            }
+
+            if(_teclado.get('der'))
+            {
+              this.xvelocity+=0.3;
+              if(this.xvelocity>2)
+                this.xvelocity=2;
+            }
+            if(!_teclado.get('izq')&&!_teclado.get('der'))
+            {
+              this.xvelocity+= (0-this.xvelocity)/20;
+            }
+
+            if(this.x<=_level.x*-1)
               {
+                this.x=_level.x*-1;
+                if(this.xvelocity<=0)
+                this.xvelocity=0.01;
+              }
+
+             if(this.x+this.w> _level.x*-1 +($tileges.xt_max) * 16)
+              {
+               this.x=_level.x*-1+($tileges.xt_max)* 16-this.w;      
+               this.xvelocity=0;
+              }
+              if(this.y-8>game.hcanvas)
+              {
+                this.hitcon.kill('empelotada');
+                return;
+              }
+
+
+           }
+
+            if(this.macroestado=='normal')
+            {
               if(this.x<=_level.x*-1)
               {
                 this.x=_level.x*-1;
@@ -696,7 +501,7 @@ document.currentScript.class =
                 let _col = col_check(this);
                 if(_col[0]&&this.x<=_level.x*-1+1)
                 {
-                  this.hitcon.kill();
+                  this.hitcon.kill('aplastada');
                   this.xvelocity=0.2;
                   return;
                 //game.escenario.set('play_0');
@@ -714,8 +519,6 @@ document.currentScript.class =
                     return; 
                   }
                 
-                
-
               }
               if(_col[3])
               {
@@ -739,7 +542,7 @@ document.currentScript.class =
               if(this.yvelocity>_vel.y_max)
                  this.yvelocity = _vel.y_max;
              
-             if(this.estado==0||this.estado==1)
+             if(this.estado==0||this.estado==1 || _teclado.get('x')!==0 && this.suelo_tt>0)
              {
               this.xvelocity+= (0-this.xvelocity)/10;
               
@@ -788,13 +591,6 @@ document.currentScript.class =
               this.salto_tt=0;
 
              }
-
-
-              if(this.x<0)
-              {
-               this.x=0;
-               this.xvelocity=0;      
-              }
                
               if(this.x+this.w> _level.x*-1 +($tileges.xt_max) * 16)
               {
@@ -802,30 +598,62 @@ document.currentScript.class =
                this.xvelocity=0;
               }
                
-
-            /*  if(this.y+this.h>game.hcanvas)
+              if(_editmode==1&& this.y+this.h>game.hcanvas)
               {
-                 this.y=game.hcanvas-this.h;
-                 this.yvelocity=0;
-                 this.suelo_tt=10;
+                this.y=game.hcanvas-this.h;
+                this.salto_tt=0;
+                this.yvelocity=0;
+                this.suelo_tt=5;
               }
-            */
+
               if(this.y-8>game.hcanvas)
               {
-                this.hitcon.kill();
+                this.hitcon.kill('empelotada');
                 return;
               }
             
+            
+            if(_editmode==0)
+            {
+             let _a = 0;
+                for(var u of _col[4])
+                {
+                    if(u!==0)
+                    {
+                      if(u.id==88)
+                      {
+                      _tilemaps[1][u.yt][u.xt]=0;
+                       _a=u;
+                      }
+                    }
+                }
+                if(_a!==0)
+                {
+                  game.playcon.play(12, 0.5);
 
-             //control pantalla
-//             $root.level.x = this.x*-1+game.wcanvas/2;
-           //  if(game.escenario.escenas.play_0.girlcon.estado==0)
-           //  {
-           //  this.scrollcon.run(); 
-           //  }
-             
+                  GES.tileges.refresh.force();
+                  crear_efecto_16($root, {anim_id:21, x:u.x+_level.x, y: u.y+_level.y,
+                                  _enterframe()
+                                  {
+                                    this.x+=(0-this.x)/10;
+                                    this.y+=(0-this.y)/10;
+                                    if(this.x<5)
+                                    {
+                                      game.escenario.act.hud.update_score(10, '+');   
+                                      this.remove();
+                                    }
+                                  }
+                                 });//calzoncito
+                }
+
+          
+          
+              
+            }
+
              
 
+             
 
              if(_teclado.get('s',2)==1)
              {
@@ -835,7 +663,6 @@ document.currentScript.class =
 
              if(_teclado.get('t',2)==1)
              {
-             console.log('dada')
                let _tiledata = $gameges.tileges.tiledata.col;
                for(var i =1;i<(6*10)*5;i++)
                {
@@ -843,13 +670,10 @@ document.currentScript.class =
                }
              }
 
-             if(_teclado.get('space',2)==1)
+             if(_editmode==0&& _teclado.get('space',2)==1)
              {
 
-
-
-
-              this.hitcon.kill();
+              this.hitcon.kill('empelotada');
               if(_teclado.get('q'))
                 this.yvelocity=30;
               return;
@@ -858,36 +682,41 @@ document.currentScript.class =
              
 
              
+              for(var u of game.enemcon.clips)
+              {
+                  if(simple_hit_test(this,u))
+                  {
+                    if(u.on_player_hit!==undefined && game.escenario.act.muerto==0)
+                       u.on_player_hit();
+                  }
+             }
+             //workaround muerte al chekear enemigos
+             if(this.macroestado=='muerto'||this.macroestado=='hit')return;
 
 
 
-             this.estado_h = this.estado;     
+             
+             if(this.estado==0||this.estado==1)
+              this.estado_h=0;
+
+             if(this.estado==2||this.estado==3)
+              this.estado_h=1;
 
 
               if(this.suelo_tt==0)
               {
                 if(this.yvelocity<1)
-                {
-                   this.estado_h=6;  
-                   if(this.estado==1||this.estado==3)
-                    this.estado_h=7;
-                }
-
+                   this.estado_h=3;  
+                
                 if(this.yvelocity>=1)
-                {
-                   this.estado_h=8;  
-                   if(this.estado==1||this.estado==3)
-                    this.estado_h=9;
-                }
+                 this.estado_h=4;  
                 
               }
 
               if(_teclado.get('x'))
               {
 
-                this.estado_h=10;
-                if(this.estado==1||this.estado==3)
-                  this.estado_h=11;
+                this.estado_h=5;
 
                 if(_teclado.get('x',2)==1)
                 {
@@ -900,46 +729,43 @@ document.currentScript.class =
                         enterframe()
                         {
 
-                         for(var u of game.enems)
+                         for(var u of game.enemcon.clips)
                          {
                            if(simple_hit_test(this,u))
                            {
-
-                            if(u.modos[u.anim_id]?.macroestado==0)
+                            
+                            if(u.hit!==undefined && u.hit[0]>0)
                             {
-                            game.crear_texto_flotante($root.level, {fuente:'opciones',x:u.x, y:u.y, texto: u.modos[u.anim_id].hit_score})  
-                            game.escenario.act.hud.update_score(u.modos[u.anim_id].hit_score, '+');  
+                              u.hit[0]--;
+                              if(u.hit[0]<=0)
+                              {
+                                game.playcon.play(9, 5);
+                                if(u.es_ropa&&u.padre.ropas_n>0)u.padre.ropas_n--;
+                                if(u.on_destroy!==undefined) u.on_destroy();
+                                u.remove();
+                              }
+                                
+                                game.fadecon.blink_clip(u);
+                              
+                                game.playcon.play(u.hit[2], 0.3);
+
+                                game.crear_texto_flotante($root.level, {fuente:'opciones',x:u.x+u.padre.x, y:u.y+u.padre.y, texto: u.hit[1] })  
+                                game.escenario.act.hud.update_score(u.hit[1], '+');  
+                                this.remove();
+                                  if(u.on_weapon_hit!==undefined)u.on_weapon_hit();
+                                break;
+
+
                             }
-                            
-                            
-                            u.on_weapon_hit();
+
+                            if(u.on_weapon_hit!==undefined)u.on_weapon_hit();
 
                             //u.remove();
                            }
                          }
                          
+                         
 
-                         for(var u of game.escenario.escenas.play_0.girlcon.ropas)
-                         {
-                          if(u.is_ropa!==1)continue;
-
-                           if(simple_hit_test(this,{x:u.x+ u.padre.x,
-                                                    y:u.y+ u.padre.y,
-                                                    w:u.w,
-                                                    h:u.h}))
-                           {
-                            if(u.sound_id!=='')
-                            game.playcon.play(u.sound_id, 0.5);
-
-                            game.crear_texto_flotante($root.level, {fuente:'opciones',x:u.x+u.padre.x, y:u.y+u.padre.y, texto: u.score[0]})  
-                            game.escenario.act.hud.update_score(u.score[0], '+');  
-
-
-                            u.on_hit();
-                            this.remove();
-                            break;
-                           }
-                         }
 
                           if(this.orien)
                           this.x+=2;
@@ -963,136 +789,13 @@ document.currentScript.class =
 
             }//macroestado
 
-            if(this.macroestado=='quemado')
+            if(this.macroestado=='muerto')
             {
               game.escenario.act.muerto=1;
-              this.estado_h = 12;
-              this.yvelocity+=0.1;
-              if(this.y>game.hcanvas+500)
-              {
-                //game.escenario.act.hud.score_a.remove();
-                game.escenario.act.hud.score_b.remove();
 
-
-              let _base = GES.crear_vacio($root, 1,{nombre:'base',x:8, y:8, w: game.wcanvas-16, h: game.hcanvas-16, 
-                                                          draw_color:'rgb(0,0,0, 0.8)'});
-
-               let _t;
-
-               let _a = crear_texto(_base, {x:10, y:2, texto: ['TU PUNTAJE:','YOUR SCORE:'] },'opciones')
-               let _b = crear_texto(_base, {x:10, y:2, texto: game.escenario.escenas.play_0.hud.score},'opciones')
-                   _b.x=_base.w-_b.w-10;
-
-
-                
-
-               let _c = crear_texto(_base, {x:10, y:20, texto: ['Altas puntuaciones:','High Scores:'] },'opciones')
-
-
-
-                if(NGIO.user.name==null)
-                {
-
-                  game.scorecon.crear_scores(_base, {i:0, x:[10,_base.w-10], y:40});
-
-                }
-                
-                else
-                {
-                  console.log('score posteado!')
-                  game.api.post_score(game.escenario.act.hud.score, ()=>{
-
-                   game.scorecon.crear_scores(_base, {i:0, x:[10,_base.w-10],y:40});
-
-
-                  } );
-                }
-
-                    
-
-               if(NGIO.user.name==null)
-               {
-                  
-
-                  let _login = game.botoncon.crear_boton($root, {x:32, y:150, fuente:'opciones',
-                                            texto:['Logueate para subir tu puntaje!','Login to submit your score!'],
-                                            _onload()
-                                            {
-                                            this.xini = this.xg;
-                                            this.yini = this.yg;
-                                            this.wini = this.w;
-                                            this.hini = this.h;
-
-                                            this.w= 200;
-                                            this.wini = this.w;
-                                            this.x= 8+(game.wcanvas-16)/2-this.w/2;
-                                            this.xini=this.x;
-                                            //_login.x=_base.x+_base.w/2-_login.w/2;
-                                            //_login.xini=_login.x;
-                                            },
-                                            on_click:()=>{
-                                            game.api.cargar_login();
-                                            
-                                            }
-                                           })
-                    _login.es_logueate=1;
-                    
-
-
-               }
-
-                
-                
-                    
-                let _rt = game.botoncon.crear_boton($root, {x:32, y:165, fuente:'opciones',
-                                           texto:['Reintentar?','Retry?'],
-                                           _onload()
-                                           {
-
-                                            this.xini = this.xg;
-                                            this.yini = this.yg;
-                                            this.wini = this.w;
-                                            this.hini = this.h;
-
-                                            this.x= 8+(game.wcanvas-16)/2-this.w/2;
-                                            this.xini=this.x;
-
-                                           },
-                                           on_click:()=>{
-                                            game.escenario.set('play_0');
-                                            }
-                                           })
-
-                    
-
-
-                    
-                let _mp = game.botoncon.crear_boton($root, {x:32, y:180, fuente:'opciones',
-                                            texto:['Menu principal','Main Menu'],
-                                            _onload()
-                                           {
-
-                                            this.xini = this.xg;
-                                            this.yini = this.yg;
-                                            this.wini = this.w;
-                                            this.hini = this.h;
-
-                                            this.x= 8+(game.wcanvas-16)/2-this.w/2;
-
-                                            this.xini=this.x;
-
-                                           },
-                                           on_click:()=>{
-                                            game.escenario.set('main_menu');
-                                            }
-                                           })
-
-                    //_mp.x=_base.x+_base.w/2-_mp.w/2;
-                    //_mp.xini=_mp.x;
-
-
-                this.remove();
-              }
+              this.kill_modo_act.enterframe(this);
+              
+              
             }
 
             if(_teclado.get('r',2)==1)
@@ -1100,36 +803,35 @@ document.currentScript.class =
               game.escenario.set('play_0');
              }
 
+             
+            
              for(var u of this.anim.animdata.animations)
              {
               for(var j of u.buf)
               {
                 if(u.no_buf_add!==1)
-                  j[0]=this.hitcon.hits;
-
+                    j[0]=this.hitcon.hits[0];
               }
 
              }
+             
 
               
              this.orien=0;
              if(this.estado==1||this.estado==3)
               this.orien=1;
+
              this.anim._z=10;
              this.anim.animdata.set_anim(this.estado_h);
-             this.anim.x=-11+10;
+             //this.anim.x=-11+10;
+             this.anim.x=-11;
              this.anim.y=2;
-             //this.anim._w=50;
-             this.anim._w=this.anim.h-5;
 
-             //this.anim.x=0;
-             //this.anim.y=0;
+             
+             this.anim.animdata.force.flip=[this.orien,0];
 
-          //  this.draw_color='blue';
-          //  this.anim.draw_color='rgba(255,0,0, 0.5)';
-            //this.anim.rotation+=0.1;
-            //this.anim._w+=0.1;
-            this.anim.rotation_c=[this.anim.w/2,this.anim.h-10];
+
+            // this.anim.rotation_c=[this.anim.w/2,this.anim.h-10];
              
        },
 

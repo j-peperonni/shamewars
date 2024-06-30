@@ -3262,6 +3262,7 @@ getWavHeader(options) {
           //ids:[capa0,capa1,capa2], modo: 'x','y', 'all'
           on_draw_tile(fy, fx, modo, ids) //llamado solo una vez por posicion(no 3 capas)
           {
+           
 
           },
           on_draw_stroke(modo) //modo: 'x', 'y', 'all'
@@ -3929,6 +3930,9 @@ getWavHeader(options) {
           {
             if(this.modo=='imagen' && this.image==='') return;
 
+            
+              
+
             if (this.filter !== undefined) {
 
               let _type = get_type(this.filter);
@@ -4117,6 +4121,16 @@ getWavHeader(options) {
       _data = setloop_prop(_data, f_data);
 
       _data.draw = function () {
+         
+            
+            
+           // {
+            // _end_image = this.image.flip_x[1];
+            //}
+            
+             
+        let _iw = this.image.width;
+        let _ih = this.image.height;
 
         if (esundempty(this.cut_cords)) {
 
@@ -4127,9 +4141,18 @@ getWavHeader(options) {
         else {
           //this.ctx.drawImage(this.image,   this.cut_cords.x,this.cut_cords.y, this.cut_cords.w, this.cut_cords.h,
           //                                                                 rx,ry,  this.w,  this.h);                     
-
-          this.draw_image(this.image, this.cut_cords.x, this.cut_cords.y, this.cut_cords.w, this.cut_cords.h,
-            this.rx, this.ry, this.w, this.h);
+           if(this.image.flip_x==undefined || this.flip_x!==1)
+           {
+           
+            this.draw_image(this.image, this.cut_cords.x, this.cut_cords.y, this.cut_cords.w, this.cut_cords.h,
+                             this.rx, this.ry, this.w, this.h);
+           }
+           else
+           {
+            this.draw_image(this.image.flip_x[1], _iw-this.cut_cords.w-this.cut_cords.x, this.cut_cords.y, this.cut_cords.w,  this.cut_cords.h,
+                                                 this.rx, this.ry, this.w, this.h);
+           
+           }
 
         }
 
@@ -8251,6 +8274,7 @@ getWavHeader(options) {
 
           mousedown(e) 
            {
+            
             let _cursor = this.cursor[0];
 
             if (_cursor.x > this.odiv_image.xr && _cursor.x < this.odiv_image.xr + this.odiv_image.wr - 25 &&

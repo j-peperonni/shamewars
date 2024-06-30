@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="basico.js"> </script>
+<script type="text/javascript" src="especializado.js"> </script>
+<script type="text/javascript" src="nud_especializado.js"> </script>
+<script type="text/javascript" src="watons_especializado.js"> </script>
+<script type="text/javascript" src="bossdata.js"> </script>
+
+<script type="text/javascript" src="NewgroundsIO.min.js"> </script>
+
+<script>
+
+
+
+//https://github.com/PsychoGoldfishNG/NewgroundsIO-JS/wiki
+//https://github.com/PsychoGoldfishNG/NewgroundsIO-JS/wiki/NGIO
+
+NGIO.init("57783:J3KVifR5", "F9iIFYRdTmH3VNbMLw9GEg==", 
+     {
+    version: "0.0.1",
+
+    checkHostLicense: true,
+    autoLogNewView: true,
+    preloadMedals: true,
+    preloadScoreBoards: true,
+    preloadSaveSlots: true,
+
+    debugMode: false
+     }
+
+    );
+//NGIO.skipLogin();
+
+ 
+ini_root();
+
+SKIN.silver.ventana.header.titulo.xb.img= "bx.png";
+
+
+
+
+//|game
+var game =
+   {
+    debug:1,
+
+    win:'',
+    canvas:'',
+    LIB:undefined,
+    wt:15, //x32
+    ht:13, //x32
+    wcanvas:'',
+    hcanvas:'',
+
+
+    
+  
+    //|info
+    info:
+    {
+     name:'ShameWars',
+     version:'0.01',
+    },//end info
+
+
+  //|levelcon
+    levelcon:
+    {
+       
+       editmode:0,
+
+
+       fondos:
+       {
+         bosque:
+          [
+           {canvas_id:0,image:4, xdiv:2},
+           {canvas_id:0,image:12, xdiv:1.5},
+
+          ],
+
+       },
+
+       on_change_editmode()
+       {
+         if(this.editmode==0)
+         {
+          this.set(this.map);
+         }
+
+         if(this.editmode==1)
+         {
+          game.enemcon.bosscon.estado=0;
+          game.enemcon.remove_all();
+          this.set(this.mastermap);
+         }
+
+       },
+
+       run()
+       {
+        game.escenario.escenas.play_0.tile_editor.estado_tiledraw=this.editmode;
+          let _teclado = game.win.teclado;
+          let _level = $root.level;
+          let _jugador = _level.jugador;
+          GES.tileges.x=-_level.x;
+
+          if(_teclado.get('p',2)==1)
+          {
+            game.enemcon.spawn_mini();
+          }
+
+          if(_teclado.get('esc',2)==1)
+          {
+            this.editmode=flipbin(this.editmode);
+            this.on_change_editmode(this.editmode);
+
+          }
+          if(this.editmode==0)
+          {
+            if(game.enemcon.bosscon.estado==0 && _jugador.macroestado!=='muerto')
+            {
+            _level.x-=1;
+            }  
+          }
+
+          else
+          {
+             _level.x = -(_jugador.x-_level.w/2);
+             if(_level.x>0)_level.x=0;
+             if( -_level.x+_level.w > GES.tileges.xt_allmax*16)
+             {
+                _level.x = -GES.tileges.xt_allmax*16+_level.w;
+             }
+          }
+
+
+          for(var u of GES.fondoges.fondos)
+          {
+            u.x=_level.x/u.xdiv;
+          }
+          
+
+
+       },
+
+       set_fondos(f_fondos)
+       {
+
+         GES.fondoges.fondos=[];
+
+         console.log(f_fondos)
+
+         for(var u of f_fondos)
+         {
+         GES.fondoges.ini(u.canvas_id, {...u, ...{ x: 0, y: 0 } } ); 
+         }
+
+         GES.fondoges.estado=1;
+             
+       },
+
+       mastermap:'',
+       map:'',
+
+       set(f_map)
+       {
+             
+             let _map       = this.map;
+             let _mastermap = this.mastermap;
+             if(f_map!==undefined)
+             {
+              _map       = this.map       = clone_object(f_map);
+              _mastermap = this.mastermap = clone_object(f_map);
+             }
+
+
+             GES.tileges.estado=1;
+             let _tiledata = game.LIB.CLASES[2];
+
+             GES.tileges.update_tilemaps(_map.tilemaps[0],_map.tilemaps[1],_map.tilemaps[2],_map.tilemaps[3]);
+             //GES.tileges.remade_tilemaps(game.ht+1,game.wt+2);
+
+             GES.tileges.tiledatas.add(_tiledata,1);
+
+             GES.tileges.refresh.force();
+
+              
+             this.set_fondos(this.fondos.bosque)
+        
+
+       },
+       on_draw_tile(fy, fx, modo)
+       {
+        let _id = GES.tileges.tilemaps[1][fy][fx];
+        let _is_enem = 0;
+        for(var i in _BOSSDATA)
+        {
+            if(_BOSSDATA[i].mini.tile_id==_id)
+            {
+              _is_enem = i;
+              break;
+            }
+        }
+        if(this.editmode==0 &&
+           _is_enem!==0)
+        {
+          GES.tileges.tilemaps[1][fy][fx]=0;
+          game.enemcon.crear_mini(i, {x:fx*16, y:fy*16});
+          //game.enemcon.spawn_mini()
+        }
+        
+        //ids:[capa0,capa1,capa2], modo: 'x','y', 'all'
+       }
+
+    },
+//|choritocam
+      choritocam:
+      {
+         win:'',
+         canvas:'',
+         tt:-1,
+         run()
+         {
+          return;
+
+          if(this.canvas!=='')
+          {
+            this.tt--;
+            if(this.tt==0)
+            {
+               this.canvas.fill('black');
+            }
+
+          }
+         },
+         ini()
+         {
+          return;
+          game.win.obj.addEventListener('mousedown',()=>{   game.choritocam.win.force_front()    } )
+
+
+          let _win = this.win = ventana.crear_ventana(_root, {x:game.win.x+game.win.w,
+                                                              y:0,
+                                                              w:150,h:150,
+                                                               literal:1, titulo:'Nude-Cam', grab:1, resize:true});
+           //_win.set_y(game.win.y+game.win.h-_win.h);
+           _win.set_x(game.win.x);
+           _win.set_y(game.win.y+game.win.h);
+
+
+          let _canvas = this.canvas = crear_canvas(_win._bloque,2,0,0,[0,0],[0,0]);
+              _canvas.fill('black');
+         },
+                    //x, y
+         crear(_id = [0, 0], f_data = {})
+         {
+          return;
+          let _canvas = this.canvas;
+          let _jugador=$root.level.jugador;
+          let _level  =$root.level;
+          
+
+            let _cut_cords = {x:0, y:48*_id[1], w:80, h:48};
+            if(_id[0]==1)
+            {
+              _cut_cords   = {x:80,y:64*_id[1], w:96, h:64};
+            }
+
+            if(f_data=='jugador')
+            f_data={x:5, y:_level.h- _cut_cords.h-5};
+              
+
+            _canvas.ctx.drawImage($LIB.IMAGES[17], 
+                                               _cut_cords.x,_cut_cords.y,
+                                               _cut_cords.w, _cut_cords.h,
+                                                0,0, _cut_cords.w,_cut_cords.h,
+                                               
+                                                 )
+            this.tt=100;
+
+             //small w:80 h:48
+             //big   w:96 h:64
+             
+             /*let _image = GES.crear_imagen(game.win, 17, 1, 
+                                                       {
+                                                         ...{x:0,y:0,w:_cut_cords.w+10,h:_cut_cords.h,
+                                                          cut_cords:_cut_cords,
+                                                          tt:50,
+                                                          enterframe()
+                                                          {
+                                                            
+                                                            this.tt--;
+                                                            if(this.tt<0)
+                                                              this.remove();
+                                                          }
+                                                         },
+                                                         ...f_data
+                                                       }
+
+                                                         );    
+              */
+
+         },
+
+      },
+
+    //|enemcon
+    enemcon:
+    {
+      clips:[],
+
+      _loop_hijos_clip_remove(_clip)
+      {
+       
+          for(var u of _clip.hijos_clip)
+          {
+            game.enemcon._loop_hijos_clip_remove(u);
+            u.remove();
+          }
+
+      },
+      push_clip(f_clip)
+      {
+       f_clip.on_remove=function()
+       {
+        let _clips = game.enemcon.clips;
+
+          game.enemcon._loop_hijos_clip_remove(this);
+          
+
+          for(var i =0;i< _clips.length;i++)
+          {
+            if(this == _clips[i])
+            {
+              _clips.splice(i,1);
+              break;
+            }
+          }
+       }
+       this.clips.push(f_clip);
+
+      },
+      run()
+      {
+       this.bosscon.run();
+      },
+      on_scene_change()
+      {
+       this.remove_all();
+      },
+
+      //|bosscon
+      bosscon:
+      {
+
+        estado:0,
+        clip:'',
+        start(f_name)
+        {
+         if(this.estado==1) return;
+         
+         let _level = $root.level;
+
+         let _data   = clone_object(game.enemcon.data[f_name]);
+         let _big    = clone_object(_data.big);
+             _big.x  = get_level_x()+_big.x;
+
+
+         this.estado = 1;
+         game.playcon.play(4,0.1);
+         game.enemcon.remove_all();
+         game.fadecon.flash();
+         
+
+         
+         let _clip = this.clip = GES.crear_vacio($root.level, 1, {..._big,
+                                                                  ...{
+                                                                     partes:[],
+                                                                     ropas_n:0,
+                                                                     act_pose_n:'',
+                                                                     end_battle()
+                                                                     {
+                                                                      for(var i = this.partes.length-1;i>=0;  i--)
+                                                                      {
+                                                                        this.partes[i].remove();
+                                                                        //game.enemcon.clips.push(_part);
+                                                                      }
+                                                                      this.remove();
+                                                                      game.enemcon.bosscon.estado=0;
+                                                                     },
+                                                                     
+                                                                     set_pose(f_id, set_ropas_n)
+                                                                     {
+                                                                       this.act_pose_n = f_id;
+                                                                      for(var i = this.partes.length-1;i>=0;  i--)
+                                                                      {
+                                                                        this.partes[i].remove();
+                                                                        //game.enemcon.clips.push(_part);
+                                                                      }
+                                                                        
+
+                                                                        this.partes = [];
+
+                                                                       if(set_ropas_n)this.ropas_n=0;
+
+                                                                      for(var u of this.poses[f_id])
+                                                                      {
+                                                                        u = clone_object(u);
+
+                                                                        u.set_cut = function(_x, _y, _w, _h, add_wh=1)
+                                                                        {
+
+                                                                          this.cut_cords=
+                                                                             {
+                                                                              x: ((16*15)*this.padre.girl_id) + _x*16,
+                                                                              y: _y*16,
+                                                                              w: _w*16,
+                                                                              h: _h*16,
+                                                                             };
+                                                                         
+                                                                         if(add_wh)
+                                                                         {
+                                                                            this.w= this.cut_cords.w;
+                                                                            this.h= this.cut_cords.h;
+                                                                         }   
+                                                                          
+                                                                        }
+
+                                                                        if(u.es_ropa)this.ropas_n++;
+
+                                                                      
+                                                                        /*
+                                                                        u.cut_cords=
+                                                                             {
+                                                                              x: ((16*10)*this.girl_id) + u.cut[0]*16,
+                                                                              y: u.cut[1]*16,
+                                                                              w: u.cut[2]*16,
+                                                                              h: u.cut[3]*16,
+                                                                             };
+
+                                                                        u.w= u.cut_cords.w;
+                                                                        u.h= u.cut_cords.h;
+                                                                        */
+                                                                       
+                                                                        let _part = GES.crear_imagen(this, 5, 1, u );
+
+                                                                            _part.set_cut(u.cut[0],u.cut[1],u.cut[2],u.cut[3]);
+
+                                                                        game.enemcon.push_clip(_part);
+                                                                        //game.enemcon.clips.push(_part);
+
+                                                                        this.partes.push(_part);
+
+                                                                      }         
+
+                                                                     }
+                                                                     }
+                                                                     })
+
+            _clip.set_pose(_clip.ini_pose, 1);
+          
+             
+          
+         
+        },
+        run()
+        {
+          if(this.estado==0)return;
+
+          //let _clip = this.clip;
+          //_clip.x += ( (-$root.level.x+16*6) -_clip.x)/30;
+
+        
+
+        }
+
+      },//end bosscon
+
+
+      data: _BOSSDATA,
+      
+      spawn_mini()
+      {
+        console.log('spawn enemigo');
+
+         this.crear_mini('sucubo', {x:-$root.level.x+250});
+
+      },
+      crear_mini(f_nombre, f_data = {})
+      {
+        let _enem_data = this.data[f_nombre];
+        
+        let _clip = GES.cargar_clase($root.level, {
+                                                   ...{
+                                                   LOAD:
+                                                         {
+                                                         id: 16,
+                                                         canvas_id: 1,
+                                                         modo: 'sprite',
+
+                                                         animdata: _enem_data.mini.animdata,
+                                                         anim_id:0,
+                                                         
+                                                         },
+                                                    hit_sound:1,
+                                                    volar_estado:0, //-1 = desactivar
+                                                    
+                                                    delete_on_out:1,
+                                                    x:-$root.level.x+50,
+                                                    y:50,
+                                                    hit_score:10,
+                                                    estado:0,
+                                                    xvelocity:0,
+                                                    yvelocity:0,
+
+                                                    _on_weapon_hit: _enem_data.mini._on_weapon_hit,
+                                                    _on_player_hit: _enem_data.mini._on_player_hit,
+                                                    _enterframe: _enem_data.mini.enterframe,
+                                                    loadframe:  _enem_data.mini.loadframe,
+                                                    on_player_hit()
+                                                    {
+                                                       if(this.volar_estado==1)return;
+                                                       if(this._on_player_hit!==undefined)
+                                                       this._on_player_hit();
+                                                       this.remove();
+                                                       
+                                                       game.enemcon.bosscon.start(this.name);
+                                                    },
+                                                    on_weapon_hit()
+                                                    {
+                                                      
+
+                                                       if(this.hit_sound>-1)
+                                                       {
+                                                            game.playcon.play(this.hit_sound);
+                                                            this.hit_sound=-1;
+                                                       }                                          
+
+                                                       if(this.hit_score>0)
+                                                       {
+                                                       game.crear_texto_flotante($root.level, 
+                                                                {fuente:'opciones',x:this.x, y:this.y, texto: this.hit_score})  
+                                                       game.escenario.act.hud.update_score(this.hit_score, '+');   
+                                                       this.hit_score=0;
+                                                       }
+                                                      
+
+                                                       if(this.volar_estado==0)//no -1
+                                                       {
+                                                        this.volar_estado = 1;
+                                                        if($root.level.jugador.x+$root.level.jugador.w/2<this.x+this.w/2)
+                                                        this.xvelocity=4;     
+                                                        else
+                                                        this.xvelocity=-4;     
+
+                                                        this.yvelocity=($root.level.jugador.yvelocity/2)*2;
+
+                                                        this.rotation=-0.1+this.yvelocity/10;
+                                                        this.rotation_c=[16,16];
+
+                                                       }
+                                                       if(this._on_weapon_hit!==undefined)
+                                                        this._on_weapon_hit();
+
+                                                    },
+                                                    enterframe()//meta enterframe
+                                                    {
+                                                      let _level = $root.level;
+                                                      let _jugador = $root.level.jugador;
+                                                      /*if(simple_hit_test(this,_jugador) && game.escenario.act.muerto==0)
+                                                      {
+                                                        this.on_player_hit();
+                                                      }
+                                                      */
+
+                                                      this.x += this.xvelocity;
+                                                      this.y += this.yvelocity;
+                                                      if(this.delete_on_out==1&&
+                                                        (this.xvelocity<0&&this.x<_level.x*-1-50 || 
+                                                         this.xvelocity>0&&this.x>_level.x*-1+game.wcanvas+50||
+                                                        this.yvelocity<0&&this.y<_level.y*-1-50  || 
+                                                        this.yvelocity>0&&this.y>_level.y*-1+game.hcanvas+50))
+                                                        {
+                                                        //console.log('enem removed');
+                                                        this.remove();
+                                                        }
+                                                       
+                                                       //if(this.volar_estado!==1)
+                                                       this._enterframe();
+                                                    },
+                                                    
+
+                                                  },
+                                                  ...f_data
+                                                 },
+
+
+                                                  {}
+                                                  
+                                                  );
+      
+            _clip.animdata.set_anim(_clip.anim_id);
+
+
+            this.push_clip(_clip);
+      },
+      remove_all()
+      {
+                for(var i=this.clips.length-1;i>=0;i--)
+                {
+                  let u = this.clips[i];
+                  u.remove();
+
+                }
+                this.clips = [];
+                
+      }
+      
+    },//end enemcon
+
+    
+
+    crear_texto_flotante(f_donde, f_data={})
+    {
+
+        let _data = {
+                     ...{
+                         x:0,
+                         y:0,
+                         
+                         texto:'_',
+                         fuente:'nb8x8',
+                        },
+                    ...f_data
+
+                    }
+
+        let _texto = crear_texto(f_donde, {x:_data.x, y:_data.y, texto: _data.texto}, _data.fuente)
+            _texto.tt=[0,40];
+            _texto.enterframe=function()
+               {
+                this.y--;
+                this.tt[0]++;
+                if(this.tt[0]>=this.tt[1])
+                {
+                  this.remove();
+                }
+               }
+
+    },
+
+    
+    
+    //|botoncon
+    botoncon:
+    {      
+      botones:[],
+      act:'',
+      on_scene_change()
+      {
+        this.botones=[];
+        this.act='';
+      },
+      run()
+      {
+           let _botones = this.botones;
+           let _cursor = game.win.cursor_bloque;
+           let _cx = _cursor.x;
+           let _cy = _cursor.y;
+
+           this.act='';
+  
+           for(var u of _botones)
+           {
+            
+             if(_cx/2>u.xini+u.padre.x&&_cx/2<u.xini+u.wini+u.padre.x&&
+                _cy/2>u.yini+u.padre.y&&_cy/2<u.yini+u.hini+u.padre.y)
+             {
+              this.act = u;
+              break;
+             }
+             //_clips[0].w++;
+           }
+
+           if(_cursor.estado[0] && this.act!=='')
+           {
+            _cursor.estado[0]=0;
+              let _act = this.act;
+              _act.on_click();               
+
+           }
+
+
+      },
+      //|crear_boton
+      crear_boton(f_donde, f_data={})
+      {
+
+        let _data = {
+                    ...{
+                        x:0,
+                        y:0,
+                        texto:'_',
+                        fuente:'opciones',
+                        canvas_id:1,
+                        zoom_scale:20,
+
+                        image_id:'',
+                        _onload()
+                        {
+                             this.xini = this.xg;
+                             this.yini = this.yg;
+                             this.wini = this.w;
+                             this.hini = this.h;
+                        },
+                        on_click(){},
+                        on_hover(){},
+                        on_leave(){},
+                       },
+                    ...f_data
+                    }
+          _data.xg = _data.x;
+          _data.yg = _data.y;
+
+
+         let _clip;
+
+               if(_data.image_id=='')
+               {
+               _clip = crear_texto(f_donde, {
+                                           _onload:_data._onload,
+
+                                           canvas_id:_data.canvas_id, x:_data.x, y:_data.y, texto:_data.texto,
+                                           xg:_data.xg,
+                                           yg:_data.yg,
+                                           
+
+                                           }, _data.fuente);
+               _clip.zoom_scale=_data.zoom_scale;
+               }
+
+               else
+               {
+                _clip = GES.crear_imagen(f_donde, _data.image_id, _data.canvas_id, { x: _data.x, y: _data.y, w:_data.w, h:_data.h,
+                                                           xg:_data.xg,
+                                                           yg:_data.yg, 
+                                                           zoom_scale:_data.zoom_scale,
+                                                           cut_cords: _data.cut_cords });
+                            _clip.xini = _clip.x;
+                            _clip.yini = _clip.y;
+                            _clip.wini = _clip.w;
+                            _clip.hini = _clip.h;
+               }
+
+
+                           _clip.on_click = bindear_(_data.on_click, _clip);
+                           _clip.on_hover = bindear_(_data.on_hover, _clip);
+                           _clip.on_leave = bindear_(_data.on_leave, _clip);
+
+                            
+                            
+
+                            _clip.enterframe = function()
+                            {
+
+                                if(game.botoncon.act==this)
+                                {
+                                  if(this.on_hover_estado!==1)
+                                  {
+                                  this.on_hover();
+                                  this.on_hover_estado=1;  
+                                  }
+                                  
+                                 
+                                this.w+=((this.wini+this.zoom_scale)-this.w)/10;
+                                this.h+=((this.hini+this.zoom_scale)-this.h)/10;
+                                }
+                                else
+                                {
+                                  if(this.on_hover_estado==1)
+                                  {
+                                  this.on_leave();  
+                                  this.on_hover_estado=0;
+                                  }
+                                  
+                                this.w+=((this.wini)-this.w)/10;
+                                this.h+=((this.hini)-this.h)/10;
+                                }
+
+
+                              this.x = fl(this.xini-( this.w-this.wini  )/2);
+                              this.y = fl(this.yini-( this.h-this.hini  )/2);
+                            }
+
+              this.botones.push(_clip);
+
+              return(_clip)
+       },
+
+    },//botoncon
+
+    //|scorecon
+    scorecon:
+    {
+       estado:0,
+       clips:[],//[[#,name, score], [#,name, score]...]
+       scores:[],
+       run()
+       {
+         if(this.estado==1)
+         {
+            let _teclado = game.win.teclado;
+            if(_teclado.get('+',2)==1)
+            {
+              this.i++;
+               this.update(this.i);
+            }
+            if(_teclado.get('-',2)==1)
+            {
+              this.i--;
+               this.update(this.i);
+            }
+          
+
+         }
+
+       },
+       on_scene_change()
+       {
+         this.estado=0;
+         this.clips=[];
+         this.scores=[];
+       },
+
+       update(_i=this.i, f_modo='')//f_modo='+','-'
+       {
+        if(f_modo=='')
+          this.i=_i;
+        if(f_modo=='+')
+          this.i+=_i;
+        if(f_modo=='-')
+          this.i-=_i;
+
+        if(this.i<0)this.i=0;
+        if(this.i>this.scores.length-1)this.i=this.scores.length-1;
+
+
+
+        _i = this.i;
+
+        let _score = this.scores;
+        if(this.estado==1)
+        {
+          for(var i =0;i<9;i++)
+          {
+            let _clip = this.clips[i];
+            if(_clip==undefined)break;
+
+             _sc = _score[_i+i];
+             if(_sc==undefined)
+             {
+             _clip.set(' ',' ',' ');
+              break;
+             }
+
+            _clip.set(_i+i+1, _sc.user.name, _sc.value);
+            
+            //{user:{name:'juanin'},value:132432 },
+          }
+
+        }
+
+       },
+       x:[0,0],
+       y:0,
+       i:0,
+
+       crear_scores(f_donde, f_data={})
+       {
+        this.estado=1;
+        let _data = {
+                    ...{
+                       i:0,
+                       x:[0,0],
+                       y:0,
+                       },
+                    ...f_data
+                    }
+          this.x=_data.x;
+          this.y=_data.y;
+          this.i=_data.i;
+
+         NGIO.getScores(game.api.ids.score, {period:'A'}, (_board, _scores)=>
+                    { 
+
+                       
+                       //botones
+                       let _a =game.botoncon.crear_boton(f_donde, {x:this.x[1], y:this.y-10, image_id:6, w:16,h:16,
+                                 cut_cords:{x:0,y:0*16,w:16,h:16},
+                              on_click(){
+                                 game.scorecon.update(1,'-');
+                                 } })
+                          
+
+                       let _b = game.botoncon.crear_boton(f_donde, {x:this.x[1], y:this.y+10*10, image_id:6, w:16,h:16,
+                                cut_cords:{x:1*16,y:0*16,w:16,h:16},
+                              on_click(){
+                                 game.scorecon.update(1,'+');
+                                 } })
+
+
+                        _scores=[
+                                  {user:{name:'articuno',id:Math.random()*100   },value:1111      },
+                                  {user:{name:'zapdos',id:Math.random()*100     },value:222 },
+                                  {user:{name:'moltres',id:Math.random()*100    },value:333 },
+                                  {user:{name:'cuatrinido',id:Math.random()*100 },value:444 },
+                                  {user:{name:'quintina',id:Math.random()*100   },value:55 },
+                                  {user:{name:'sixverto',id:Math.random()*100   },value:6 },
+                                  {user:{name:'seteavo',id:Math.random()*100    },value:77777777 },
+                                  {user:{name:'chavo del 8',id:Math.random()*100},value:888 },
+                                  {user:{name:'novenin',id:Math.random()*100    },value:999 },
+                                  {user:{name:'diecin',id:Math.random()*100     },value:10 },
+                                  {user:{name:'jua121n',id:Math.random()*100    },value:11 },
+                                  {user:{name:'juadasdn',id:Math.random()*100   },value:12 },
+                                  {user:{name:'judas',id:Math.random()*100      },value:13 },
+                                  
+                                  ];
+
+                          this.scores = _scores;
+                        
+                         for(var i =0;i<10;i++)
+                         {
+                         let _clip = {
+                                       set(f_num, f_name, f_score)
+                                       {
+                                        if(f_name.length>9)
+                                          f_name = f_name.slice(0,9);
+
+                                          this.clips[0].set_text(f_num);  
+                                          this.clips[0]._onload=()=>{
+                                          this.clips[0].w=10;
+                                          this.clips[0].h=12;  
+                                          }
+                                          
+                                          this.clips[1].set_text(f_name);    
+                                          this.clips[2].set_text(f_score);
+                                          this.clips[2]._onload=()=>{
+                                          this.clips[2].x=game.scorecon.x[1]-this.clips[2].w;  
+                                          }
+                                          
+                                       },
+                                       remove_childs()
+                                       {
+                                         for(var u of this.childs)
+                                         {
+                                          u.remove();
+                                         }
+
+                                       },
+                                       clips:[
+                                              crear_texto(f_donde, {canvas_id:2,x:_data.x[0]   , y:i*10+4+_data.y, texto:' '},'opciones'),
+                                              crear_texto(f_donde, {canvas_id:2,x:_data.x[0]+12, y:i*10+_data.y  , texto:' '},'opciones'),
+                                              crear_texto(f_donde, {canvas_id:2,x:0         , y:i*10+_data.y  , texto:' '},'opciones')
+                                             ],
+                                       }
+                              this.clips.push(_clip);
+                          }
+
+                          this.update(_data.i);
+
+
+                        
+                        
+                     });
+
+       },
+
+
+    },//scorecon
+
+    //|lenguacon
+    lenguacon:
+    {
+       id:0,//0=español, 1=ingles
+       ini()
+       {
+        this.set(0);
+       },
+       set(f_id = 0)
+       {
+        window['$LEN']=f_id;
+
+        //if(f_id==this.id) return;
+
+        this.id = f_id;
+        
+        let _win = game.win;
+        let _menu = clone_object(game.menu);
+
+        _win.macrobloque.header.menu.hijos[0].remove();
+
+        game.update_title();
+
+        let _trad=
+        {
+           'Juego':         ['Juego','Game'],
+           'Menu principal': ['Menu principal','Main menu'],
+           'Nueva partida': ['Nueva partida','New game'],
+
+           'Opciones':      ['Opciones','Options'],
+           'Sonido':        ['Sonido','Sound'],
+           'Lenguaje':      ['Lenguaje','Language'],
+              'Español chileno': ['Español chileno✔', 'Chilean spanish'],
+              'Ingles':          ['Ingles',                   'English✔'],
+
+        }
+
+        function recur(f_obj)
+        {
+
+           let _copy = {};
+
+           for(var i in f_obj)
+           {
+               if(_trad[i]!==undefined)
+               {
+                let _name = _trad[i][$LEN];
+
+                let u = f_obj[i];
+                //delete(f_obj[i]);
+
+                 if(get_type(u)=='object')
+                 {
+                 u = recur(u); 
+                 }
+                 
+                _copy[_name]=u;
+                //f_obj[i]='dada';
+               } 
+               else   
+                _copy[i]=f_obj[i];
+           }
+
+           return(_copy);
+        }
+        _menu = recur(_menu);
+
+
+        MENU.crear_menu(_win.macrobloque.header.menu, _menu, {});
+
+        _win.ordenar_bloques();
+        _win.ini_$();
+
+        
+        function _recur(f_donde)
+        {
+          for(var u of f_donde.hijos_clip)
+          {
+             _recur(u);
+             if(u.traduccion!==undefined)
+             {
+             u.set_text(u.traduccion[$LEN]);
+             }
+          }
+        }
+        _recur($root);
+
+         
+         //if(game.escenario.act.nombre=='main_menu')
+         //{
+         //  game.escenario.set('main_menu');
+        // }
+
+
+
+
+       }
+    },
+    //lenguacon
+
+    update_title()
+    {
+
+      let _t =  ["[USUARIO NO IDENTIFICADO]", "[USER NOT IDENTIFIED]"];
+          _t =  _t[$LEN];
+
+      if(NGIO.user!==null && NGIO.user.name!==null)
+        _t =  " [" + NGIO.user.name + "]";
+       //_t =  " [🔑: " + NGIO.user.name + "]";
+
+
+       game.win.set_title( game.info.name + ' ' + game.info.version + _t);
+
+    },
+
+   //|api
+    api:
+    {
+        user:'',
+
+        subwin:'',//mensaje login
+
+        ids:
+        {
+          score:13519,
+        },
+
+        cargar_unlogin()
+        {
+           NGIO.logOut();
+           //NGIO.skipLogin();
+        },
+        post_score(_value, _callback=()=>{})
+        {
+        
+        NGIO.postScore(this.ids.score,  _value, _callback)
+        //NGIO.postScore(game.api.ids.score, fl(Math.random()*100), (e)=>{  console.log(e)}   );
+
+        },
+        cargar_login()
+        {
+          let _t = ['Loguear...', 'Login...'];
+
+          let _subwin = this.subwin = game.win.crear_subventana({x:100,y:100,w:300,h:200, grab:1, titulo:_t[$LEN]});
+              
+              _subwin.on_close=()=>
+                       {
+                       NGIO.cancelLogin();
+                       this.subwin='';
+                      
+                       }
+
+          _t =["Espera mientras estableces conexión...", "Please wait..."];
+              let _mensaje = crear_odiv(_subwin._bloque, 0,0,[0,0],[35,0], {border:'none', textAlign:'center'})
+               _mensaje.obj.innerHTML = _t[$LEN];
+
+          _t =['Cancelar','Cancel'];
+          let _close = _FORM.crear_boton(_subwin._bloque, {x:80,y:120, 
+                       styles:[{border:'1px solid gray',textAlign:'center', background:'white'},
+                               {border:'1px solid gray',textAlign:'center',background:'lightgray'}],
+                               texto:_t[$LEN], mousedown(){ 
+
+                  game.api.subwin.cerrar();
+
+                  } });
+
+           
+
+
+          NGIO.openLoginPage();
+
+        },
+        
+        on_user_login()//loguearse bien [no cueta vacia] if(NGIO.user.name!==null)
+        {
+         if(this.subwin!=='')
+         {
+          this.subwin.on_close=()=>{};
+          this.subwin.cerrar();
+          this.subwin='';
+         }
+          if(game.escenario.act.nombre=='play_0'&&game.escenario.act.muerto==1)
+          {
+
+            game.api.post_score(game.escenario.act.hud.score, ()=>{
+                             
+                               game.scorecon.update();
+
+                             } );
+
+             for(var i=0;i<game.botoncon.botones.length;i++)
+             {
+              let u = game.botoncon.botones[i];
+               if(u.es_logueate)
+               {
+                game.botoncon.botones.splice(i,1);
+                u.remove();
+                break;
+               }
+                
+             }
+           
+
+          }
+
+        },
+
+        on_ready()
+        {
+          if(game.debug==0)
+          {
+          game.win.obj.style.display='block';
+          }
+
+          if(NGIO.user.name!==null)
+            this.on_user_login();
+            
+            if(game.escenario.act.nombre=='main_menu')
+            {
+            game.escenario.set(game.escenario.act.nombre);  
+            game.lenguacon.set($LEN);
+            }
+            
+
+
+
+          game.update_title();
+
+        },
+        run()
+        {
+         this.user = NGIO.user;
+           
+           
+//      console.log(NGIO.isReady)
+  
+
+           NGIO.getConnectionStatus(function(_status) {
+            console.log(_status);
+
+            if (!NGIO.legalHost) alert('bad');
+            //else
+            //{
+            //  alert('good!'); 
+           // }
+
+           //console.log(_status);
+
+           if(_status=='ready')
+           {
+              game.api.on_ready();
+           }
+
+           if(_status=='login-required')
+           {
+           
+            setTimeout(
+                      ()=>{NGIO.skipLogin()},100);
+
+            //NGIO.cancelLogin();
+          //  NGIO.openLoginPage();
+           }
+
+           if(_status=='login-successful')
+           {
+            //console.log(NGIO.user);
+
+           }
+            
+
+           });
+
+        }
+
+
+    },//api
+
+    //|menu
+    menu:
+    {
+     Juego:
+     {
+      'Menu principal'()
+      {
+        game.escenario.set('main_menu');
+      },
+      'Nueva partida'()
+      {
+        game.escenario.set('play_0');
+      },
+     },
+     
+     Opciones:
+     {
+      Sonido(){},
+      Musica(){},
+      Lenguaje:
+      {
+        'Español chileno'(){
+          game.lenguacon.set(0);
+        },
+        Ingles(){
+          game.lenguacon.set(1);
+        },
+      }
+     },
+     Escenas:
+     {
+      'main_menu'()
+      {
+        game.escenario.set('main_menu');
+      },
+      'historia'()
+      {
+      game.escenario.set('historia');
+      },
+      'galeria'()
+      {
+      game.escenario.set('galeria');
+      },
+      'play_0'()
+      {
+        game.escenario.set('play_0');
+      },
+
+
+     },
+
+      //|api
+      API:
+      {
+        skip_login()
+        {
+            NGIO.skipLogin();
+        },
+
+        test_medalla()
+        {
+
+          NGIO.unlockMedal(77457, (e)=>{console.log(e)  });
+
+        },
+        score:
+        {
+           log()
+           {
+          //  NGIO.getScoreBoard(13511)
+            NGIO.getScores(game.api.ids.score, {period:'A'}, (_board, _scores)=>{ console.log(_scores)  }  );
+           },
+           post_random()
+           {
+            NGIO.postScore(game.api.ids.score, fl(Math.random()*10000), (e)=>{  console.log(e)}   );
+           }
+
+        },
+        log_user()
+        {
+        console.log(NGIO.user);
+        },
+        conectar()
+        {
+         NGIO.openLoginPage();
+        },
+       desconectar()
+       {
+        NGIO.logOut();
+        NGIO.skipLogin();
+       }
+
+      },
+
+     $Help:
+     {
+      About()
+      {
+
+      }
+     },
+    },//menu
+
+    //|playcon
+    playcon:
+    {
+       s_vol:0.4,
+       m_vol:1,
+       play(f_id, f_gain=1, f_pitch=0, f_loop=0)
+       {
+         AUDIO.play_sample(game.win.LIB.SOUNDS[f_id], f_gain*this.s_vol, f_pitch, f_loop);
+
+       },
+
+    },//playcon
+
+    cargar_puntuacion()
+    {
+  //game.escenario.act.hud.score_a.remove();
+              game.escenario.act.hud.remove_score_clips();
+   // game.escenario.act.hud.score_b.remove();
+
+
+              let _base = GES.crear_vacio($root, 2,{canvas_id:2, nombre:'base',x:8, y:8, w: game.wcanvas-16, h: game.hcanvas-16, 
+                                                          draw_color:'rgb(0,0,0, 0.8)'});
+
+               let _t;
+
+               let _a = crear_texto(_base, {canvas_id:2, x:10, y:2, texto: ['TU PUNTAJE:','YOUR SCORE:'] },'opciones')
+               let _b = crear_texto(_base, {canvas_id:2, x:10, y:2, texto: game.escenario.escenas.play_0.hud.score},'opciones')
+                   _b.x=_base.w-_b.w-10;
+
+
+                
+
+               let _c = crear_texto(_base, {canvas_id:2, x:10, y:20, texto: ['Altas puntuaciones:','High Scores:'] },'opciones')
+
+
+
+                if(NGIO.user.name==null)
+                {
+
+                  game.scorecon.crear_scores(_base, {canvas_id:2, i:0, x:[10,_base.w-10], y:40});
+
+                }
+                
+                else
+                {
+                  console.log('score posteado!')
+                  game.api.post_score(game.escenario.act.hud.score, ()=>{
+
+                   game.scorecon.crear_scores(_base, {canvas_id:2, i:0, x:[10,_base.w-10],y:40});
+
+
+                  } );
+                }
+       
+
+               if(NGIO.user.name==null)
+               {
+                  
+
+                  let _login = game.botoncon.crear_boton($root, {canvas_id:2, x:32, y:150, fuente:'opciones',
+                                            texto:['Logueate para subir tu puntaje!','Login to submit your score!'],
+                                            _onload()
+                                            {
+                                            this.xini = this.xg;
+                                            this.yini = this.yg;
+                                            this.wini = this.w;
+                                            this.hini = this.h;
+
+                                            this.w= 200;
+                                            this.wini = this.w;
+                                            this.x= 8+(game.wcanvas-16)/2-this.w/2;
+                                            this.xini=this.x;
+                                            //_login.x=_base.x+_base.w/2-_login.w/2;
+                                            //_login.xini=_login.x;
+                                            },
+                                            on_click:()=>{
+                                            game.api.cargar_login();
+                                            
+                                            }
+                                           })
+                    _login.es_logueate=1;
+                    
+
+
+               }
+
+                
+                
+                    
+                let _rt = game.botoncon.crear_boton($root, {canvas_id:2, x:32, y:165, fuente:'opciones',
+                                           texto:['Reintentar?','Retry?'],
+                                           _onload()
+                                           {
+
+                                            this.xini = this.xg;
+                                            this.yini = this.yg;
+                                            this.wini = this.w;
+                                            this.hini = this.h;
+
+                                            this.x= 8+(game.wcanvas-16)/2-this.w/2;
+                                            this.xini=this.x;
+
+                                           },
+                                           on_click:()=>{
+                                            game.escenario.set('play_0');
+                                            }
+                                           })
+
+                    
+
+
+                    
+                let _mp = game.botoncon.crear_boton($root, {canvas_id:2, x:32, y:180, fuente:'opciones',
+                                            texto:['Menu principal','Main Menu'],
+                                            _onload()
+                                           {
+
+                                            this.xini = this.xg;
+                                            this.yini = this.yg;
+                                            this.wini = this.w;
+                                            this.hini = this.h;
+
+                                            this.x= 8+(game.wcanvas-16)/2-this.w/2;
+
+                                            this.xini=this.x;
+
+                                           },
+                                           on_click:()=>{
+                                            game.escenario.set('main_menu');
+                                            }
+                                           })
+
+                    //_mp.x=_base.x+_base.w/2-_mp.w/2;
+                    //_mp.xini=_mp.x;
+
+
+
+    },
+
+    //|fadecon
+    fadecon:
+    {
+        blink_clip(f_clip, f_dur=2)
+        {
+          f_clip.filter={'invert':100};
+          GES.crear_vacio($root, 2,{huesped:f_clip, w: 0, h: 0,draw_color:'red', tt:f_dur, x:0,y:0,enterframe()
+                       {
+                         this.tt--;
+                         if(this.tt<0)
+                         {
+                          this.huesped.filter={};
+                          this.remove();
+                         }
+                          
+                       }
+
+                         });
+
+
+        },
+        flash(f_color='white', f_dur=3)
+        {
+          GES.crear_vacio($root, 2,{w: game.wcanvas, h: game.hcanvas,draw_color:f_color, tt:f_dur,x:0,y:0, tt:0,enterframe()
+                       {
+                         this.tt--;
+                         if(this.tt<0)
+                          this.remove();
+                       }
+
+                         });
+        }
+    },
+
+    //|escenario
+    escenario:
+    {
+       act:'',
+       set(_name)
+       {
+        if(game.escenario.escenas.play_0.tile_editor!==undefined)
+        {
+           game.escenario.escenas.play_0.tile_editor.win.remove();
+           game.escenario.escenas.play_0.tile_editor=undefined;
+        }
+
+        game.botoncon.on_scene_change();
+        game.enemcon.on_scene_change();
+
+
+         GES.fondoges.estado = 0;
+         GES.fondoges.fondos=[];
+
+         GES.tileges.estado = 0;
+         
+         $root.hijos_clip=[];
+
+         $root.level= GES.crear_vacio($root, {w: game.wcanvas, h: game.hcanvas });
+         this.act = this.escenas[_name];
+         GES.clear_all();
+         for (var u of GES.canvasses)
+         {
+             u.no_clear = 0;
+             for(var b of u.buffers)
+             {
+              b.clear();
+             }
+         }
+
+         this.act.load();
+         game.scorecon.on_scene_change();
+
+
+       },
+       run()
+       {
+        if($root?.level)
+        z_set($root.level.hijos_clip);
+
+         game.botoncon.run();
+         game.scorecon.run();
+         
+
+         game.enemcon.run();
+         game.choritocam.run();
+
+        if(this.act!=='')
+            this.act.run();
+
+        
+
+       },
+       
+       //|escenas
+       escenas:
+       {
+
+        //|historia
+        historia:
+        {
+         nombre:'historia',
+
+         imagecon:
+         {
+          textos:[
+                   [
+                        ['Elena es periodista',
+                        'de 18 años.',
+                        ' '],
+
+                        ['Ellen is 18 years old', 
+                         "Very cute",
+                          "And big breasted"]
+                   ],
+                   [
+                        ['Un dia eslla estaba',
+                        'en una conferencia',
+                        'mundial.'],
+
+                        ['Ellen is 18 years old', 
+                         "Very cute",
+                          "And big breasted"]
+                   ],
+                   [
+                       [],[]
+                   ],
+                   [
+                        ['Lo siento niña',
+                         'No tienes la ropa',
+                          'adecuada para pasar'],
+
+                        ['Ellen is 18 years old', 
+                         "Very cute",
+                          "And big breasted"]
+                   ],
+
+
+                 ],
+          image:'',
+             wt:13,
+             ht:9,
+             n:0,
+             texto_xy:[10,140],
+             texto_clips:[],
+             set(f_n=0, f_ini=0)
+             {
+              if(f_n=='next')
+                f_n=this.n+1;
+                           
+              if(f_n=='back')
+              {
+                this.n-=1;
+                if(this.n<0)
+                {
+                    this.n=0;
+                    return;
+                }
+                f_n=this.n;
+              }
+
+              if(f_ini!==1)
+              {
+                for(var u of this.texto_clips)
+                  u.remove();
+              }
+
+               this.n=f_n;
+               if(f_ini)
+               {
+                this.texto_clips=[];
+
+                let _his = GES.crear_imagen($root.level, 15,2, { x: 16*1, y: 0, w: 16 * this.wt, h: 16 * this.ht, 
+                                                            
+                                                           cut_cords: { x: 0, y: 0, w: 16 * this.wt, h: 16 * this.ht,
+                                                             } });
+                this.image=_his;
+               }
+
+               this.image.cut_cords.y=(16*this.ht)*f_n;
+
+             if(this.n<this.textos.length)
+             {
+                let _texto = this.textos[this.n];
+                let _xy = this.texto_xy;
+                for(var i =0;i<_texto[0].length;i++)
+                {
+
+                  let u = [_texto[0][i],_texto[1][i]];
+
+                  let _t = crear_texto($root.level, {canvas_id:2, x:_xy[0], y:_xy[1]+ i*14, texto:u},'opciones_simple');
+                  this.texto_clips.push(_t);
+                }
+            }
+
+            if(this.n==0)game.escenario.act.anterior.visible=false;
+            else
+              game.escenario.act.anterior.visible=true;
+
+
+
+
+             },
+         },
+         
+         load()
+         {
+         
+          
+
+       /*let _a =game.botoncon.crear_boton(f_donde, {x:this.x[1], y:this.y-10, image_id:6, w:16,h:16,
+                                 cut_cords:{x:0,y:12*16,w:16,h:16},
+                              on_click(){
+                                 game.scorecon.update(1,'-');
+                                 } })
+                                 */
+
+
+          let _volver = game.botoncon.crear_boton($root, {canvas_id:2,x:3, y:0, 
+                               texto:['volver','Return'], 
+
+                               fuente:'opciones',
+                              on_click(){
+                               game.escenario.set('main_menu');
+
+                              } })
+           
+           let _anterior = game.botoncon.crear_boton($root, {canvas_id:2,x:this.x=0, y:game.hcanvas/2-32, image_id:6,w:16,h:16,
+                               cut_cords:{x:16*2,y:0*16,w:16,h:16},
+                              on_click(){
+                               game.escenario.act.imagecon.set('back',0);
+
+                              } })
+           this.anterior = _anterior;
+
+
+
+
+          let _siguiente = game.botoncon.crear_boton($root, {canvas_id:2,x:this.x=game.wcanvas-20, y:game.hcanvas/2-32, image_id:6,w:16,h:16,
+                               cut_cords:{x:16*3,y:0*16,w:16,h:16},
+                              on_click(){
+                               game.escenario.act.imagecon.set('next',0);
+
+                              } })
+          this.siguiente=_siguiente;
+
+            
+
+          this.imagecon.set(0,1);
+          
+
+
+         },
+         run()
+         {
+
+         },
+        },
+
+        //|galeria
+        galeria:
+        {
+         nombre:'galeria',
+
+         estado:0,
+         foto_z:10,
+
+         load()
+         {
+          this.estado=0;
+             
+             let _volver = game.botoncon.crear_boton($root, {canvas_id:2,x:3, y:0, 
+                               texto:['volver','return'], 
+
+                               fuente:'opciones',
+                              on_click(){
+                               game.escenario.set('main_menu');
+
+                              } })
+
+             let _titulo = crear_texto($root.level, {canvas_id:2, x:0, y:20, texto:['Chicas desbloquedas', 'Unlooked girls'],
+                              _onload(){
+                               this.x=game.wcanvas/2-this.w/2;
+
+                              }},'opciones')
+
+          let _chicaname = crear_texto($root.level, {canvas_id:2, x:0, y:65, texto:['Patricia', 'Unlooked girls'],
+                              _onload(){
+                               this.x=game.wcanvas/2-this.w/2;
+
+                              }},'opciones')
+
+          this.chicaname = _chicaname;
+
+             let _xy = [30,90];
+             let _chicadata =
+                 [
+                 {
+                    nombre:'Patricia',
+                    girlcon_id:'sucubo',
+                 },
+                 {
+                    nombre:'Ellie',
+                    girlcon_id:'blondie',
+                 },
+                 {
+                    nombre:'Noelia'
+                 },
+                 {
+                    nombre:'Pamela'
+                 },
+                 {
+                    nombre:'Aura'
+                 },
+                 
+                 {
+                    nombre:'Patricia'
+                 },
+                 {
+                    nombre:'Patricia'
+                 },
+                 {
+                    nombre:'Patricia'
+                 },
+                 {
+                    nombre:'Patricia'
+                 },
+                 {
+                    nombre:'Patricia'
+                 },
+                 ]
+             let j =0;
+             let _i=0;
+             for(var i =0;i<10;i++)
+             {
+               
+               if(i==5){j=1;_i=-5}
+
+               let _save = game.savecon.data.chicas[i];
+
+                let _foto = game.botoncon.crear_boton($root.level, {canvas_id:2,
+                              x: (i+_i)*35+_xy[0], 
+                              y: j*35+_xy[1], w: 32, h: 32,
+                 image_id:2,
+                     cut_cords:{x:i*32,y:9*32+ _save*32, w:32,h:32},
+                    on_click(){
+                      //game.escenario.act.imagecon.set('back',0);
+                        game.escenario.act.estado=1;
+
+                        if(this.savedata==0)
+                        {
+
+                          return;
+                        }
+                      game.escenario.escenas.play_0.girlcon.set(this.chicadata.girlcon_id);
+
+                              },
+                    on_hover()
+                    {
+                      this.zoom_scale=15;
+                      if(this.savedata==0)
+                      {
+                      this.zoom_scale=5;
+                      this.chicadata.nombre='???';  
+                      }
+                      game.escenario.act.chicaname.set_text(this.chicadata.nombre);
+                      game.escenario.act.chicaname.chica = this;
+                      game.escenario.act.chicaname.data_text.texto = this.chicadata.nombre;
+                      game.escenario.act.chicaname.visible=true;
+                      this._z=game.escenario.act.foto_z;
+                      game.escenario.act.foto_z++;
+                      
+                    },
+                    on_leave()
+                    {
+                      if(game.escenario.act.chicaname.chica==this)
+                          game.escenario.act.chicaname.visible=false;
+
+                    }
+              })
+                 _foto.savedata = _save;
+                 _foto.i = i;
+                 _chicaname.visible=false;
+
+                  _foto.chicadata = _chicadata[i];
+
+                //GES.crear_vacio($root.level, 1, { draw_color:'blue',x: i*35+_xy[0], y: j*35+_xy[1], w: 16*2, h: 16*2})
+              
+             }
+
+         },
+         
+
+         run()
+         {
+
+             if(this.estado==1)//deslizar escena
+             {
+              $root.level.x += ( (-game.wcanvas)-$root.level.x )/10;
+             }
+            game.escenario.escenas.play_0.girlcon.run();
+         },
+        },
+
+         //|main_menu
+         main_menu:
+         {
+            nombre:'main_menu',
+            opciones:
+            {
+             
+               clips:[],
+               _textos:[['Nueva Partida', 'Historia', 'Galeria','Puntuaciones', '', 'Loguear', 'Desloguear'],
+                        ['Start Game', 'Story', 'Galery','High Scores',        '', 'Login',   'Unlogin']
+                       ],
+
+               funciones:
+                        [
+                         function(){game.escenario.set('play_0')},
+                         function(){game.escenario.set('historia')},
+                         function(){game.escenario.set('galeria')},
+                         function(){game.scorecon.scorelist()},
+                         
+                         '',
+                         function(){game.api.cargar_login()  },
+
+                         function(){game.api.cargar_unlogin()  },
+
+                        ],
+
+               _xy_ini:[100,80],
+               ini()
+               {
+                  this.opciones=[];
+                  this.clips=[];
+                  let _xy = this._xy_ini;
+                  let _i=0;
+                  for(var i =0;i<this._textos[$LEN].length;i++)
+                  {
+                    
+                    if(i==4)continue;
+                    if(i==5&&NGIO.user?.name!==null){_i--; continue};
+                    if(i==6&&NGIO.user?.name==null){  continue};
+                    //if(u=='' ||  i==4&&NGIO.user?.name!==null 
+                    //         ||  i==5&&NGIO.user?.name==null){continue};
+
+
+                    let _clip = game.botoncon.crear_boton($root, {canvas_id:2,x:_xy[0], y:_xy[1]+20*(i+_i), 
+                               texto:[this._textos[0][i],this._textos[1][i]], 
+
+                               fuente:'opciones',
+                              on_click:this.funciones[i]})
+                    
+
+                    this.clips.push(_clip);
+
+                  }
+                  
+               },
+               act:'',
+               run()
+               {
+                
+               }
+             
+
+            },
+
+            //|cheat
+            cheat:{
+              history:[],
+              last:'una señorita',
+              
+              on_keydown(e)
+              {
+                let _history = this.history;
+                this.history.push(e.key);
+
+                let _str = _history.toString().replaceAll(',', '');
+
+                for(var i in this.efectos)
+                {
+                   
+                   if(_str.slice(-i.length)==i && this.last !== i)
+                   {
+                      this.efectos[i]();
+                      this.last=i;
+                      game.playcon.play(8);
+                      break;
+                      
+                   }
+
+                  
+                }
+
+              },
+              efectos:
+              {
+                 'una dama'()
+                 {
+                  game.escenario.escenas.main_menu.logo2.cut_cords.x=0;
+                  game.escenario.escenas.main_menu.logo2.cut_cords.w=((16*6));
+                  game.escenario.escenas.main_menu.logo2.w=((16*6));
+
+                  game.escenario.escenas.main_menu.cheat.cut_cords = game.escenario.escenas.main_menu.logo2.cut_cords;
+                  game.escenario.escenas.main_menu.cheat.cut_cords.__w=game.escenario.escenas.main_menu.logo2.w;
+
+                 },
+                 'choro peluo'() 
+                 {
+                  
+                  game.escenario.escenas.main_menu.logo2.cut_cords.x=((16*6))+16;
+                  game.escenario.escenas.main_menu.logo2.cut_cords.w=((16*6));
+                  game.escenario.escenas.main_menu.logo2.w=((16*6));
+
+                  game.escenario.escenas.main_menu.cheat.cut_cords = game.escenario.escenas.main_menu.logo2.cut_cords;
+                  game.escenario.escenas.main_menu.cheat.cut_cords.__w=game.escenario.escenas.main_menu.logo2.w;
+
+                 },
+                 'soltera'()
+                 {
+                       game.escenario.escenas.main_menu.logo2.cut_cords.x=((16*6)*2)+32;
+                       game.escenario.escenas.main_menu.logo2.cut_cords.w=((16*8));
+                       game.escenario.escenas.main_menu.logo2.w=((16*8));
+
+                       game.escenario.escenas.main_menu.cheat.cut_cords = game.escenario.escenas.main_menu.logo2.cut_cords;
+                       game.escenario.escenas.main_menu.cheat.cut_cords.__w=game.escenario.escenas.main_menu.logo2.w;
+                 }
+              }
+
+            },
+
+            load()
+            {
+              
+            //this.cheat.last=''; 
+
+            let _logo = this.logo = GES.crear_imagen($root.level, 2,2, { x: 16*7-8, y: 8, w: 16 * 8, h: 16 * 4, 
+                                                            rotation_c:[16*4,16*2],
+                                                            
+                                                           //enterframe(){this.rotation-=0.1},
+                                                           cut_cords: { x: 0, y: 0, w: 16 * 8, h: 16 * 4,
+                                                             } });
+            console.log(_logo)
+
+            let _logo2 = this.logo2 = GES.crear_imagen($root.level, 2,2, { x: 0, y: 8, w: 16 * 6, h: 16 * 13, 
+                                                             cut_cords: { x: 0, y: 4*16, w: 16 * 6, h: 16 * 13} });
+
+            if(this.cheat.cut_cords!==undefined)
+            {
+              _logo2.cut_cords=this.cheat.cut_cords;
+              _logo2.w=this.cheat.cut_cords.__w;
+            }
+
+            
+            this.opciones.ini();
+            },
+            run()
+            {
+             
+             this.opciones.run();
+
+              
+              let _teclado = game.win.teclado;
+              
+           
+            }
+
+         },//main_menu
+
+         //|play_0
+         play_0:
+         {
+          nombre:'play_0',
+          muerto:0,
+            
+            hud:
+            {
+              score:0,
+              clips:[],
+              remove_score_clips()
+              {
+                for(var u of this.clips)
+                      u.remove();
+              },
+              update_score(f_n=0, f_modo='')
+              {
+
+                 if(f_modo=='')
+                  this.score=f_n;
+
+                if(f_modo=='+')
+                  this.score+=f_n;
+
+                if(f_modo=='-')
+                  this.score-=f_n;
+
+                let _t = this.score.toString();
+                for(var i = _t.length;i<3;i++)
+                {
+                  _t = '0'+_t;
+                }
+                
+                for(var i =0;i<this.clips.length;i++)
+                {
+                   this.clips[i].visible=false;
+                   if(i<_t.length)
+                   {
+                   this.clips[i].set_text(_t.charAt(i));
+                   this.clips[i].visible=true; 
+                   }
+                   
+                }
+                //this.score_b.set_text(_t+'');
+
+              },
+              ini()
+              {
+
+                this.clips=[];
+                for(var i =0;i<6;i++)
+                {
+                 let _clip = crear_texto($root, {canvas_id:2, x:3+10*i, y:-1, texto:'0'},'opciones');
+                     _clip.possy = [-1,-1,-2,-2,-2,-2,-1,-1, 0, 1,1, 2,2,2,2, 1,1,
+                                    0, 
+                                    -1,-1,-2,-2,-2,-2,-1,-1, 0, 1,1, 2,2,2,2, 1,1,
+                                    0,
+                                    ];
+                     _clip.possy_tt=[0,3, i*2 ];
+
+                     _clip.enterframe=function()
+                     {
+                      _clip.h=20;
+                      this.possy_tt[0]++;
+                      if(this.possy_tt[0]>this.possy_tt[1])
+                      {
+                        this.possy_tt[0]=0;
+                        this.possy_tt[2]++;
+                        if(this.possy_tt[2]==this.possy.length)
+                          this.possy_tt[2]=0;
+                      }
+                      this.y = this.possy[this.possy_tt[2]]-1;
+                     }
+                    this.clips.push(_clip);
+                }
+                //let _score_b = this.score_b = crear_texto($root, {canvas_id:2, x:4, y:0, texto:'000'},'opciones')
+                
+                this.update_score(0);
+               
+               
+
+              }
+
+
+            },
+            on_muerto()
+            {
+             this.muerto=1;
+             $root.level.jugador.remove();
+             game.cargar_puntuacion();
+
+            },
+
+            load()
+            {
+             this.muerto=0;
+
+
+             
+             let _player = GES.cargar_clase($root.level, 0,{nombre:'jugador', x:16*5,y:4*16});
+
+             game.levelcon.set(game.LIB.CLASES[4]);
+             
+
+             
+
+            
+             this.hud.ini();
+             //this.girlcon.stop();
+             
+             game.enemcon.bosscon.estado=0;
+             //this.girlcon.estado=0;
+
+            
+            if(game.debug==1)
+            {
+            this.tile_editor = DEBUG.crear_tile_editor(
+            _root,
+            {
+                x: game.win.x + game.win.wr, y: game.win.y,
+                odiv_des: game.win._bloque,
+                cursor_des: game.win.cursor_bloque,
+
+                tileges: $tileges,                
+                
+              //  on_get_map: game.mapcon.on_get_map,
+                teclado: game.win.teclado,
+
+                objcon:{
+                        //callback: bindear_(game.cargar_enemigo, game)
+                       },
+
+
+                images: [$LIB.IMAGES[1], $LIB.IMAGES[1]], 
+                
+                offset_obj: $root.level,
+
+                tw: 4,
+                th: 4,
+                minimap_scale: 4,
+                key:
+                {
+                  erase: ['lshift', 0], //tecla, indice tile vacio
+                  drop: 'ctrl',
+                },
+                on_set_title(f_text) {
+                  //return (f_text + '[' + game.editor.estado + ']');
+                },
+                on_save_objtile(f_obj) {
+
+                  /*if (f_obj !== 0 && f_obj !== undefined) {
+                    let _end = clone_object(f_obj);
+                    _end.in = 0;
+                    delete _end._clip; //eliminar referencia clip
+                    return (_end);
+                  }
+                  return (f_obj);
+                    */
+
+                 }
+              
+            })//creacion editor
+            this.tile_editor.estado_tiledraw=1;
+          }
+
+          game.win.obj.focus();
+
+          //this.tile_editor.set_modo()
+          
+
+
+            },
+            run()
+            {
+ 
+               game.levelcon.run();
+
+            }
+
+         }//main_menu
+       },
+
+    },//escenario
+
+     //|run
+     run()
+     {
+       this.escenario.run();
+       this.api.run();
+     },   
+     //|ini
+     ini()
+     {
+
+      game.dummy   = document.createElement('canvas');
+      game.dummy.ctx   = game.dummy.getContext('2d');
+
+      
+     let _win = this.win = ventana.crear_ventana(_root,{x:0,y:0,w:32*game.wt,h:32*game.ht, menu:game.menu,literal:1,teclado:1, titulo:game.info.name + ' ' + game.info.version + "" ,grab:0 });
+
+
+
+     if(game.test==0)
+     {
+     _win.obj.style.display='none';  
+     }
+
+
+      game.choritocam.ini();
+      _win.teclado.add_keydown(bindear_(game.events.on_keydown, game));
+      _win.cursor.add_mousedown(bindear_(game.events.on_mousedown, game));
+      _win.cursor.add_mouseup(bindear_(game.events.on_mouseup, game));
+      _win.cursor.add_mousemove(bindear_(game.events.on_mousemove, game));
+
+
+     window['$LEN']=game.lenguacon.id;
+     
+
+     this.canvas = crear_canvas(_win._bloque,2,0,0,[0,0],[0,0]);
+    
+     let _canvasses = this.canvasses = [crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,0], {},{modo_borde:'sobrepuesto'}),
+                                        crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,0], {
+                                          filter: "drop-shadow(0px 10px 0px rgba(0,0,0,0.3) )"
+                                          },{modo_borde:'sobrepuesto'}),
+
+                                        crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,0], {},{modo_borde:'sobrepuesto'}),
+                                        ];
+      game.wcanvas = _canvasses[0].obj.width;
+      game.hcanvas = _canvasses[0].obj.height;
+      
+      //GES.canvasses[1].obj.style.filter= "drop-shadow(0px 10px 0px rgba(0,0,0,0.3) )";
+
+      _win.LIB = this.LIB;
+      
+      window['GES'] = GAME.crear_gestor(_win, _canvasses,
+        {
+          donde: _win._bloque,
+
+          w: _canvasses[0].wr / 2,
+          h: _canvasses[0].hr / 2
+        });
+      game.gestor = GES;
+
+      GES.fondoges.estado = 0;
+
+
+      GES.tileges.ini_with_buffers([1, 1, 2],
+                                            {
+                                            id: 1,
+                                            wt: 16, ht: 16,
+                                            yt_max: game.ht, xt_max: game.wt
+
+                                            }
+                                  );
+      GES.tileges.estado = 0;
+      GES.tileges.on_draw_tile=bindear_(game.levelcon.on_draw_tile, game.levelcon);
+
+      
+
+      this.escenario.set('main_menu');
+
+      game.lenguacon.ini();
+
+
+     crear_enterframe(_root, game.win,  bindear_(game.run,this) );
+      
+      //GES.tileges.tiledatas.tiledatas=[];
+      //GES.tileges.tiledatas.add($LIB.CLASES[10], 0);//worldmap
+      //GES.tileges.tiledatas.add($LIB.CLASES[6], 1);//main game
+
+     },//ini
+
+
+    //|savecon
+    savecon:
+    {
+      on_chica_derrotada(f_id)
+      {
+         this.data.chicas[f_id]=1;
+      },
+     data:
+     {
+       chicas:[1,1,1,0,0,  0,0,0,0,0],
+       //chicas:[0,0,0,0,0,  0,0,0,0,0],
+     }
+    },//end savecon
+   
+   events:
+   {
+    on_keydown(e){
+
+         game.escenario.escenas.main_menu.cheat.on_keydown(e);
+
+    },
+    on_keyup(e){},
+    on_mousedown(e){},
+    on_mouseup(e){},
+    on_mousemove(e){},
+   }
+
+   }//game
+
+
+
+
+
+  LOAD_ISC([
+   'images/patricia_00.png',
+   'images/tilesets.png',    
+   'images/misc.png',
+   //'images/objects.png',
+   'images/player.png',
+   'images/fondo_0.png',   
+   'images/girls.png',   
+   'images/e16.png',   
+   'images/girl_ropas.png',   
+   "images/fuente_nb8x8.png",
+   "images/ele_big.png",
+
+
+   "images/fuente_opciones.png",//10
+   "images/fuente_opciones_2.png",
+   "images/fore_0.png",
+   "images/fore_1.png",
+   'images/fondo_1.png',   
+   'images/historia.png',   
+   'images/mini_girls.png',   
+   'images/choritocam.png',   
+
+  ],
+
+    //|imp sounds
+    [    
+    "sounds/jump_0.wav",
+    "sounds/jump_1.wav",
+    "sounds/jump_2.wav",
+    "sounds/swoogg.wav",
+    "sounds/enterzone.wav",
+
+    "sounds/metal0.wav",//5
+    "sounds/metal1.wav",
+    "sounds/risas0.wav",
+    "sounds/Hidefree.wav",
+    "sounds/hit.wav",
+
+    "sounds/boom.wav",//10
+    "sounds/shyend.wav",
+    "sounds/select.wav",
+    "sounds/mijitarica.wav",
+    "sounds/flash1.wav",
+
+    ],
+
+   //|imp class
+
+    [
+   'class/player.js',
+   'maps/00.json',
+   'class/tiledata.json',
+   'class/e16.js',
+   
+   'maps/00.json',
+
+    ],
+    game,
+    game.ini);
+
+
+
+
+
+
+</script>

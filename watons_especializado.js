@@ -191,6 +191,7 @@ var RPG =
                                            xg:_data.xg,//usado al redimensionar botones
                                            yg:_data.yg,//usado al redimensionar botones
                                            _onload:_data._onload,
+                                           enterframe:_data.enterframe,
                                          
                                              //w:0,
                                              //h:0
@@ -858,8 +859,8 @@ var RPG =
 }//RPG
 
 
-
-function col_check(_clip, _auto_vel_stop=1) {
+//|col_check
+function col_check(_clip) {
     let _x16 = fl(_clip.x / 16);
     let _y16 = fl(_clip.y / 16);
 
@@ -896,6 +897,7 @@ function col_check(_clip, _auto_vel_stop=1) {
         });
       } 
     }
+
 
     for (var u of _col) {
 
@@ -973,6 +975,7 @@ function col_check(_clip, _auto_vel_stop=1) {
         }
       }
     }
+    _ret.push(_col);
     return (_ret);
 
   }//colcheck
