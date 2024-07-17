@@ -2379,7 +2379,7 @@ var game =
      let _win = this.win = ventana.crear_ventana(_root,{x:0,y:0,w:32*game.wt,h:32*game.ht, menu:game.menu,literal:1,teclado:1, titulo:game.info.name + ' ' + game.info.version + "" ,grab:0 });
 
 
-     if (IS_MOBILE!==123) {
+     if (IS_MOBILE) {
     _win.set_h(_win.hr + 100);
     TECLADO.crear_teclado_visual(_win, _win.teclado, 'basico', {
        botones:{
@@ -2393,7 +2393,7 @@ var game =
 
        },
 
-       base:{style:{background:'white',border:'none'}  }});
+       base:{style:{background:'white',border:'none', borderTop:'1px solid black'}  }});
 
     }
 
