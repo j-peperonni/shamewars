@@ -1,5 +1,126 @@
 _BOSSDATA =
        {
+        //|objects
+        objects:
+        {
+          moai:
+          {
+           tile_id:103,
+           anim_id:0,
+           canvas_id:1,
+           animdata: GAME.crear_animdata({ master: { wt: 16, ht: 16, ll: 30 } },
+                                             { offset:[2,0], ll: 20, wt:16,ht:32, buf: [[0, 0] ] },
+                                             
+                                             { offset:[2,0], ll: 20, wt:16,ht:32, buf: [[0, 1] ] },
+                                             { offset:[2,0], ll: 20, wt:16,ht:32, buf: [[0, 2] ] },
+                                            
+
+                                             ),   
+           tt_ataque:[0,50, 100],
+           muerto:0,
+           on_weapon_hit()
+           {
+            if(this.muerto!==1)
+              game.playcon.play(15);
+
+           this.animdata.set_anim(2);
+           this.muerto=1;
+           },
+           _loadframe(){},
+           _enterframe(){
+            if(this.muerto)return;
+           this.tt_ataque[0]++;
+           if(this.tt_ataque[0]==this.tt_ataque[1])
+           {
+            this.animdata.set_anim(1);
+            game.enemcon.crear_mini('sucubo', {x:this.x, y:this.y});
+           }
+            
+
+           if(this.tt_ataque[0]==this.tt_ataque[2])
+            {
+              this.animdata.set_anim(0);
+              this.tt_ataque[0]=0;
+            }            
+
+           },
+           on_player_hit()
+           {
+            if(this.muerto==0)
+            {
+             $root.level.jugador.hitcon.hit('empelotada');
+            }
+           },
+
+          },//end moai
+
+          espina:
+          {
+           tile_id:123,
+           anim_id:0,
+           canvas_id:1,
+           animdata: GAME.crear_animdata({ master: { wt: 16, ht: 16, ll: 30 } },
+                                             { offset:[0,0], ll: 20, wt:16,ht:16, buf: [[16*1, 16*0+10,  16,5] ] },
+                                             
+                                             ),   
+           //draw_color:'blue',
+           estado:0,
+           return_tt:0,
+           on_weapon_hit(){},
+           _loadframe(){
+            this.y+=20;
+            this.x_ini=this.x;
+            this.y_ini=this.y;
+            this._h=2;
+
+            _clip = GES.crear_imagen(this, 18, 1, { x:0,y:-5,w:16,h:5, cut_cords:{x:16,y:0, w:16,h:5 }});
+          
+
+           },
+           _enterframe(){
+            let _jugador = $root.level.jugador;
+
+            if(this.estado==0&&_jugador.x+_jugador.w>this.x && _jugador.x<this.x+16)
+            {
+              game.playcon.play(16);
+              this.estado=1;
+            }
+            
+            if(this.estado==1)
+            { 
+              this._h += ( 27-this._h)/7;   
+
+              if(this._h>=21&&(_jugador.x+_jugador.w<this.x-10 || _jugador.x>this.x+16+10) )
+              {
+                
+                this.estado=0;
+              }
+               
+            }
+            if(this.estado==0)
+            {
+
+             this._h += ( 2-this._h)/7;   
+            }
+
+            this._h =  fl(this._h);
+            this.y  =  fl(this.y_ini-this._h);
+            
+               
+            
+           },
+           on_player_hit()
+           {
+            
+             $root.level.jugador.hitcon.hit('clavada');
+            
+           },
+
+          },//end espina
+         
+
+        },//objects
+
        	//|sucubo
         sucubo:
         {
@@ -526,10 +647,10 @@ _BOSSDATA =
               this.volar_estado=0;
               this.name = 'blondie';
               let _tilemap = GES.tileges.tilemaps[1];
-              this.y=0;
+              //this.y=0;
 
 
-              for(var i=0;i<30;i++)
+              /*for(var i=0;i<30;i++)
                 {
                    if(_tilemap[i]&&_tilemap[i][fl(this.x/16) ]>0)
                    {
@@ -539,6 +660,7 @@ _BOSSDATA =
                    }
                 }
                  this.y=500;
+                 */
 
              },
              enterframe()

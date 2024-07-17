@@ -41,7 +41,7 @@ SKIN.silver.ventana.header.titulo.xb.img= "bx.png";
 //|game
 var game =
    {
-    debug:1,
+    debug:0,
 
     win:'',
     canvas:'',
@@ -98,7 +98,9 @@ var game =
 
        run()
        {
+        if(game.debug==1)
         game.escenario.escenas.play_0.tile_editor.estado_tiledraw=this.editmode;
+
           let _teclado = game.win.teclado;
           let _level = $root.level;
           let _jugador = _level.jugador;
@@ -109,7 +111,7 @@ var game =
             game.enemcon.spawn_mini();
           }
 
-          if(_teclado.get('esc',2)==1)
+          if(game.debug==1&&_teclado.get('esc',2)==1)
           {
             this.editmode=flipbin(this.editmode);
             this.on_change_editmode(this.editmode);
@@ -191,23 +193,36 @@ var game =
        },
        on_draw_tile(fy, fx, modo)
        {
+        if(this.editmode==1)return;
         let _id = GES.tileges.tilemaps[1][fy][fx];
-        let _is_enem = 0;
-        for(var i in _BOSSDATA)
+        
+        //cargar objetos
+        for(var i in _BOSSDATA.objects)
         {
-            if(_BOSSDATA[i].mini.tile_id==_id)
+          
+            if(_BOSSDATA.objects[i].tile_id==_id)
             {
-              _is_enem = i;
+              GES.tileges.tilemaps[1][fy][fx]=0;
+              game.enemcon.crear_objeto(i,  {x:fx*16, y:fy*16});
+
               break;
             }
         }
-        if(this.editmode==0 &&
-           _is_enem!==0)
+
+        //cargar minis
+        for(var i in _BOSSDATA)
         {
-          GES.tileges.tilemaps[1][fy][fx]=0;
-          game.enemcon.crear_mini(i, {x:fx*16, y:fy*16});
-          //game.enemcon.spawn_mini()
+          if(i=='objects')continue;
+
+            if(_BOSSDATA[i].mini.tile_id==_id)
+            {
+              GES.tileges.tilemaps[1][fy][fx]=0;
+              game.enemcon.crear_mini(i, {x:fx*16, y:fy*16});
+
+              break;
+            }
         }
+        
         
         //ids:[capa0,capa1,capa2], modo: 'x','y', 'all'
        }
@@ -495,6 +510,56 @@ var game =
          this.crear_mini('sucubo', {x:-$root.level.x+250});
 
       },
+      crear_objeto(f_name, f_data)
+      {
+        f_class = clone_object(this.data.objects[f_name]);
+
+             let _clip = GES.cargar_clase($root.level, {
+                                                   ...{
+                                                   LOAD:
+                                                         {
+                                                         id: 18,
+                                                         canvas_id: f_class.canvas_id,
+                                                         modo: 'sprite',
+
+                                                         animdata: f_class.animdata,
+                                                         },
+                                                         _loadframe(){},
+                                                         loadframe()
+                                                         {
+                                                           this._loadframe();
+                                                         },
+                                                         _enterframe(){},
+                                                         enterframe()
+                                                         {
+                                                          let _level = $root.level;
+                                                        
+                                                         if(this.x<_level.x*-1-100 || 
+                                                            this.x>_level.x*-1+game.wcanvas+100||
+                                                            this.y<_level.y*-1-100  || 
+                                                            this.y>_level.y*-1+game.hcanvas+100)
+                                                           {
+                                                        
+                                                           this.remove();
+                                                           }
+                                                       
+                                                       
+                                                        this._enterframe();
+                                                        },
+
+
+                                                         
+
+                                                       },
+                                                    ...f_class,
+                                                    ...f_data
+                                                   }
+                                                   );
+           _clip.animdata.set_anim(_clip.anim_id);
+          this.push_clip(_clip);
+          return(_clip);
+
+      },
       crear_mini(f_nombre, f_data = {})
       {
         let _enem_data = this.data[f_nombre];
@@ -630,10 +695,13 @@ var game =
                 for(var i=this.clips.length-1;i>=0;i--)
                 {
                   let u = this.clips[i];
-                  u.remove();
+                  if(game.levelcon.editmode==1 || game.levelcon.editmode==0 && u.tile_id!==123)//workaround no elimnar espina
+                     u.remove();
+
+                this.clips.slice(i,1);
 
                 }
-                this.clips = [];
+                //this.clips = [];
                 
       }
       
@@ -1030,9 +1098,13 @@ var game =
 
            'Opciones':      ['Opciones','Options'],
            'Sonido':        ['Sonido','Sound'],
+           'Musica':        ['Musica','Sonido'],
            'Lenguaje':      ['Lenguaje','Language'],
               'Español chileno': ['Español chileno✔', 'Chilean spanish'],
               'Ingles':          ['Ingles',                   'English✔'],
+
+           '$Ayuda':         ['$Ayuda', '$Help'],
+           'Acerca de':      ['Acerca de', 'About']
 
         }
 
@@ -1311,14 +1383,16 @@ var game =
       {
         game.escenario.set('main_menu');
       },
-      'historia'()
+      /*'historia'()
       {
       game.escenario.set('historia');
       },
+
       'galeria'()
       {
       game.escenario.set('galeria');
       },
+      */
       'play_0'()
       {
         game.escenario.set('play_0');
@@ -1370,9 +1444,9 @@ var game =
 
       },
 
-     $Help:
+     $Ayuda:
      {
-      About()
+      'Acerca de'()
       {
 
       }
@@ -1394,6 +1468,7 @@ var game =
 
     cargar_puntuacion()
     {
+      
   //game.escenario.act.hud.score_a.remove();
               game.escenario.act.hud.remove_score_clips();
    // game.escenario.act.hud.score_b.remove();
@@ -1409,7 +1484,9 @@ var game =
                    _b.x=_base.w-_b.w-10;
 
 
-                
+      
+      if(game.debug==1)
+        {
 
                let _c = crear_texto(_base, {canvas_id:2, x:10, y:20, texto: ['Altas puntuaciones:','High Scores:'] },'opciones')
 
@@ -1464,6 +1541,8 @@ var game =
 
 
                }
+
+          }//debug     
 
                 
                 
@@ -1956,6 +2035,11 @@ var game =
                   let _i=0;
                   for(var i =0;i<this._textos[$LEN].length;i++)
                   {
+                    if(game.debug==0)
+                    {
+                    if(i!==0)continue;  
+                    }
+                    
                     
                     if(i==4)continue;
                     if(i==5&&NGIO.user?.name!==null){_i--; continue};
@@ -2285,6 +2369,13 @@ var game =
       game.dummy.ctx   = game.dummy.getContext('2d');
 
       
+      if(game.debug==0)
+      {
+        delete game.menu.API;
+        delete game.menu.Escenas;
+        delete game.menu.Opciones.Sonido;
+        delete game.menu.Opciones.Musica;
+      }
      let _win = this.win = ventana.crear_ventana(_root,{x:0,y:0,w:32*game.wt,h:32*game.ht, menu:game.menu,literal:1,teclado:1, titulo:game.info.name + ' ' + game.info.version + "" ,grab:0 });
 
 
@@ -2397,7 +2488,7 @@ var game =
    'images/patricia_00.png',
    'images/tilesets.png',    
    'images/misc.png',
-   //'images/objects.png',
+   
    'images/player.png',
    'images/fondo_0.png',   
    'images/girls.png',   
@@ -2415,6 +2506,7 @@ var game =
    'images/historia.png',   
    'images/mini_girls.png',   
    'images/choritocam.png',   
+   'images/objects.png',
 
   ],
 
@@ -2437,6 +2529,10 @@ var game =
     "sounds/select.wav",
     "sounds/mijitarica.wav",
     "sounds/flash1.wav",
+    "sounds/earth01.wav",
+    "sounds/claw_0.wav",
+    "sounds/claw_1.wav",
+    
 
     ],
 

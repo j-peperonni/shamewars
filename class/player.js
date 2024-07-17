@@ -48,6 +48,8 @@ document.currentScript.class =
                      { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [3, 0] ] },
                      //electrocutada
                      { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [3, 1] ] },
+                     //culopinchada
+                     { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [3, 2] ] },
                    
                   
 
@@ -184,7 +186,8 @@ document.currentScript.class =
               {
                 if(this.foo!==1)
                 {
-                _jugador.crear_texto([['NO VEAS!', 'MI CHORITO', 'MI CHORO', 'MI SAPITO'],['DONT LOOK', 'MY SLIT'] ]);  
+                _jugador.crear_texto([['NO VEAS!', 'MI CHORITO', 'MI CHORO', 'MI SAPITO'],
+                                      ["Don t see me", 'My pussy', 'Pervert', 'What are you staring at?'] ]);  
                 this.foo=1;
                 }
                 _jugador.estado_h=1;
@@ -202,7 +205,10 @@ document.currentScript.class =
                            hit: [ [0,0],[0,0],[0,0] ],
                            kill:[ [0,1],[0,2],[0,3] ]
                            },
-
+            hit:
+            {
+              anim_id:12,
+            },
             animdata: GAME.crear_animdata( { master: { offset:[-16,-16],wt: 64, ht: 32+16, ll: 30 } },
                                            { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [4, 4] ] },
                                            { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [4, 5] ] },
@@ -232,6 +238,46 @@ document.currentScript.class =
                }
             },
            },//end aplastada
+
+           clavada:
+           {
+                        choritocam_id:{
+                           hit: [ [0,0],[0,0],[0,0] ],
+                           kill:[ [0,1],[0,2],[0,3] ]
+                           },
+            hit:
+            {
+              anim_id:12,
+            },
+            animdata: GAME.crear_animdata( { master: { offset:[-16,-16],wt: 64, ht: 32+16, ll: 30 } },
+                                           { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [4, 4] ] },
+                                           { ll: 5, flip:[0,0], no_buf_add:1, buf: [ [4, 5] ] },
+                                          ),
+
+            loadframe(_jugador)
+            {
+            _jugador.crear_texto([['ME PICO EL POTO', 'AU, MI POTITO'],['MY BUTT','MY BUTT'] ],{y:-30});
+            let _p = [[5,5],[-5,5]]; _p = _p[$root.level.jugador.orien];
+            crear_particula($root.level, {anim_id:2, grav:0.03, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//calzoncito
+                _p = [[-8,-10],[-8,-10]]; _p = _p[$root.level.jugador.orien];
+            crear_particula($root.level, {anim_id:3, grav:0.03, x:_jugador.x+_p[0], y: _jugador.y+_p[1]});//sosten
+
+             _jugador.yvelocity=-3;                
+             _jugador.anim.animdata.force.flip=[_jugador.orien,0];
+            },
+            enterframe(_jugador)
+            {
+               _jugador.yvelocity+=0.1;
+               if(_jugador.yvelocity<0.5)
+                _jugador.estado_h=0;
+              else
+                _jugador.estado_h=1;
+               if(_jugador.y>game.hcanvas+500)
+               {
+                   game.escenario.act.on_muerto();
+               }
+            },
+           },//end clavada
 
            electrocutada:
            {
