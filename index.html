@@ -2379,8 +2379,13 @@ var game =
      let _win = this.win = ventana.crear_ventana(_root,{x:0,y:0,w:32*game.wt,h:32*game.ht, menu:game.menu,literal:1,teclado:1, titulo:game.info.name + ' ' + game.info.version + "" ,grab:0,mobile:1});
 
 
+    let _plus_mobile=0;
     if (IS_MOBILE!==30) {
-    _win.set_h(_win.hr + 100);
+      _plus_mobile=100;
+    _win.set_h(_win.hr + _plus_mobile);
+
+    
+
     TECLADO.crear_teclado_visual(_win.macrobloque, _win.teclado, 'basico', {
       style_cabeza:{paddingTop:'30px'},
        botones:{
@@ -2419,12 +2424,12 @@ var game =
 
      this.canvas = crear_canvas(_win._bloque,2,0,0,[0,0],[0,0]);
     
-     let _canvasses = this.canvasses = [crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,0], {},{modo_borde:'sobrepuesto'}),
-                                        crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,0], {
+     let _canvasses = this.canvasses = [crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,_plus_mobile], {},{modo_borde:'sobrepuesto'}),
+                                        crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,_plus_mobile], {
                                           filter: "drop-shadow(0px 10px 0px rgba(0,0,0,0.3) )"
                                           },{modo_borde:'sobrepuesto'}),
 
-                                        crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,0], {},{modo_borde:'sobrepuesto'}),
+                                        crear_canvas(_win._bloque, 2, 0, 0, [0,0], [0,_plus_mobile], {},{modo_borde:'sobrepuesto'}),
                                         ];
       game.wcanvas = _canvasses[0].obj.width;
       game.hcanvas = _canvasses[0].obj.height;
