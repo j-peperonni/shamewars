@@ -2379,6 +2379,27 @@ var game =
      let _win = this.win = ventana.crear_ventana(_root,{x:0,y:0,w:32*game.wt,h:32*game.ht, menu:game.menu,literal:1,teclado:1, titulo:game.info.name + ' ' + game.info.version + "" ,grab:0 });
 
 
+     if (IS_MOBILE!==123) {
+    _win.set_h(_win.hr + 100);
+    TECLADO.crear_teclado_visual(_win, _win.teclado, 'basico', {
+       botones:{
+         z:{x:10, w:70,h:70, y:20},
+         x:{x:79, w:70,h:70, y:20},
+
+         der:{x:50*0+10},
+         aba:{x:50*1+10-1},
+         arr:{x:50*1+10-1},
+         izq:{x:50*2+10-2},
+
+       },
+
+       base:{style:{background:'white',border:'none'}  }});
+
+    }
+
+
+
+
 
      if(game.test==0)
      {
